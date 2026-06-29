@@ -1,0 +1,466 @@
+$Common = "../Common.ui";
+
+$Common.@PageOverlay {
+  LayoutMode: CenterMiddle;
+
+  $Common.@DecoratedContainer {
+    Anchor: (Width: 1100, Height: 840);
+
+    #Title {
+      Label #AdminTitle {
+        Style: (...$Common.@DefaultLabelStyle, FontSize: 18, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center);
+        Padding: (Horizontal: 19);
+        Text: "StackWise Administration";
+      }
+    }
+
+    #Content {
+      LayoutMode: Top;
+      Padding: (Top: 12, Bottom: 12, Left: 18, Right: 18);
+
+      Group #TabBar {
+        Anchor: (Height: 48, Bottom: 8);
+        LayoutMode: Left;
+
+        $Common.@TextButton #RulesTabActive { @Text = "Rules"; Anchor: (Width: 220, Height: 42, Right: 8); }
+        $Common.@SecondaryTextButton #RulesTabInactive { @Text = "Rules"; Anchor: (Width: 220, Height: 42, Right: 8); Visible: false; }
+        $Common.@TextButton #SettingsTabActive { @Text = "Global settings"; Anchor: (Width: 220, Height: 42); Visible: false; }
+        $Common.@SecondaryTextButton #SettingsTabInactive { @Text = "Global settings"; Anchor: (Width: 220, Height: 42); }
+      }
+
+      Group #StatusGroup {
+        Anchor: (Height: 44, Bottom: 6);
+        LayoutMode: Full;
+        Visible: false;
+
+        Label #StatusInfoLabel { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #96a9be); Text: ""; }
+        Label #StatusSuccessLabel { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #72c878); Text: ""; Visible: false; }
+        Label #StatusWarningLabel { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f); Text: ""; Visible: false; }
+        Label #StatusErrorLabel { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e56b6f); Text: ""; Visible: false; }
+      }
+
+      Group #ReportBar {
+        Anchor: (Height: 50, Bottom: 8);
+        LayoutMode: Left;
+
+        Group {
+          FlexWeight: 1;
+          Anchor: (Height: 46, Right: 10);
+          LayoutMode: Full;
+          Label #ReportInfoLabel { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #96a9be); Text: ""; }
+          Label #ReportSuccessLabel { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #72c878); Text: ""; Visible: false; }
+          Label #ReportWarningLabel { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f); Text: ""; Visible: false; }
+          Label #ReportErrorLabel { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e56b6f); Text: ""; Visible: false; }
+        }
+
+        $Common.@SecondaryTextButton #ViewLogButton { @Text = "View log"; Anchor: (Width: 160, Height: 42); }
+      }
+
+      Group #RulesTabContent {
+        FlexWeight: 1;
+        LayoutMode: Top;
+
+        Group {
+          Anchor: (Height: 48, Bottom: 8);
+          LayoutMode: Left;
+
+          Label #SearchLabel {
+            Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center);
+            Anchor: (Width: 120, Height: 38, Right: 10);
+            Text: "Search rules";
+          }
+
+          $Common.@TextField #SearchField {
+            Anchor: (Height: 38, Right: 8);
+            FlexWeight: 1;
+            PlaceholderText: "Rule id or item id/pattern";
+            MaxLength: 256;
+          }
+
+          $Common.@SecondaryTextButton #SearchButton { @Text = "Search"; Anchor: (Width: 120, Height: 42, Right: 8); }
+          $Common.@TertiaryTextButton #ClearSearchButton { @Text = "Clear"; Anchor: (Width: 120, Height: 42); }
+        }
+
+        Group {
+          Anchor: (Height: 46, Bottom: 8);
+          LayoutMode: Left;
+
+          $Common.@TextButton #NewRuleButton { @Text = "New rule"; Anchor: (Width: 170, Height: 42, Right: 8); }
+          $Common.@SecondaryTextButton #ReloadButton { @Text = "Reload JSON"; Anchor: (Width: 190, Height: 42, Right: 8); }
+          $Common.@SecondaryTextButton #ExportButton { @Text = "Export item catalog"; Anchor: (Width: 250, Height: 42); }
+        }
+
+        Group #RulesScroll {
+          FlexWeight: 1;
+          LayoutMode: TopScrolling;
+          ScrollbarStyle: $Common.@DefaultScrollbarStyle;
+          KeepScrollPosition: true;
+          Padding: (Right: 10);
+
+          Label #RulesLabel {
+            Style: $Common.@DefaultLabelStyle;
+            Anchor: (Height: 24, Bottom: 8);
+            Text: "Stack rules";
+          }
+
+        Group #RuleRow0 {
+          Anchor: (Height: 74, Bottom: 6);
+          LayoutMode: Left;
+
+          Group {
+            FlexWeight: 1;
+            Anchor: (Height: 68, Right: 12);
+            LayoutMode: Top;
+            Label #RuleName0 { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 28); Text: "Rule"; }
+            Label #RuleDescription0 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 40); Text: "Rule details"; }
+          }
+
+          Group #RuleActions0 {
+            Anchor: (Width: 302, Height: 50);
+            LayoutMode: Left;
+            $Common.@SecondaryTextButton #EditButton0 { @Text = "Edit"; Anchor: (Width: 120, Height: 44, Right: 10); }
+            $Common.@CancelTextButton #DeleteButton0 { @Text = "Delete"; Anchor: (Width: 172, Height: 44); }
+          }
+
+          Group #DeleteConfirmation0 {
+            Anchor: (Width: 690, Height: 62);
+            LayoutMode: Left;
+            Visible: false;
+
+            Label #DeleteConfirmationLabel0 {
+              Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f);
+              FlexWeight: 1;
+              Anchor: (Height: 58, Right: 10);
+              Text: "";
+            }
+
+            $Common.@SecondaryTextButton #CancelDeleteButton0 { @Text = "Cancel"; Anchor: (Width: 120, Height: 44, Right: 10); }
+            $Common.@CancelTextButton #ConfirmDeleteButton0 { @Text = "Confirm delete"; Anchor: (Width: 210, Height: 44); }
+          }
+        }
+        Group #RuleRow1 {
+          Anchor: (Height: 74, Bottom: 6);
+          LayoutMode: Left;
+
+          Group {
+            FlexWeight: 1;
+            Anchor: (Height: 68, Right: 12);
+            LayoutMode: Top;
+            Label #RuleName1 { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 28); Text: "Rule"; }
+            Label #RuleDescription1 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 40); Text: "Rule details"; }
+          }
+
+          Group #RuleActions1 {
+            Anchor: (Width: 302, Height: 50);
+            LayoutMode: Left;
+            $Common.@SecondaryTextButton #EditButton1 { @Text = "Edit"; Anchor: (Width: 120, Height: 44, Right: 10); }
+            $Common.@CancelTextButton #DeleteButton1 { @Text = "Delete"; Anchor: (Width: 172, Height: 44); }
+          }
+
+          Group #DeleteConfirmation1 {
+            Anchor: (Width: 690, Height: 62);
+            LayoutMode: Left;
+            Visible: false;
+
+            Label #DeleteConfirmationLabel1 {
+              Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f);
+              FlexWeight: 1;
+              Anchor: (Height: 58, Right: 10);
+              Text: "";
+            }
+
+            $Common.@SecondaryTextButton #CancelDeleteButton1 { @Text = "Cancel"; Anchor: (Width: 120, Height: 44, Right: 10); }
+            $Common.@CancelTextButton #ConfirmDeleteButton1 { @Text = "Confirm delete"; Anchor: (Width: 210, Height: 44); }
+          }
+        }
+        Group #RuleRow2 {
+          Anchor: (Height: 74, Bottom: 6);
+          LayoutMode: Left;
+
+          Group {
+            FlexWeight: 1;
+            Anchor: (Height: 68, Right: 12);
+            LayoutMode: Top;
+            Label #RuleName2 { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 28); Text: "Rule"; }
+            Label #RuleDescription2 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 40); Text: "Rule details"; }
+          }
+
+          Group #RuleActions2 {
+            Anchor: (Width: 302, Height: 50);
+            LayoutMode: Left;
+            $Common.@SecondaryTextButton #EditButton2 { @Text = "Edit"; Anchor: (Width: 120, Height: 44, Right: 10); }
+            $Common.@CancelTextButton #DeleteButton2 { @Text = "Delete"; Anchor: (Width: 172, Height: 44); }
+          }
+
+          Group #DeleteConfirmation2 {
+            Anchor: (Width: 690, Height: 62);
+            LayoutMode: Left;
+            Visible: false;
+
+            Label #DeleteConfirmationLabel2 {
+              Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f);
+              FlexWeight: 1;
+              Anchor: (Height: 58, Right: 10);
+              Text: "";
+            }
+
+            $Common.@SecondaryTextButton #CancelDeleteButton2 { @Text = "Cancel"; Anchor: (Width: 120, Height: 44, Right: 10); }
+            $Common.@CancelTextButton #ConfirmDeleteButton2 { @Text = "Confirm delete"; Anchor: (Width: 210, Height: 44); }
+          }
+        }
+        Group #RuleRow3 {
+          Anchor: (Height: 74, Bottom: 6);
+          LayoutMode: Left;
+
+          Group {
+            FlexWeight: 1;
+            Anchor: (Height: 68, Right: 12);
+            LayoutMode: Top;
+            Label #RuleName3 { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 28); Text: "Rule"; }
+            Label #RuleDescription3 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 40); Text: "Rule details"; }
+          }
+
+          Group #RuleActions3 {
+            Anchor: (Width: 302, Height: 50);
+            LayoutMode: Left;
+            $Common.@SecondaryTextButton #EditButton3 { @Text = "Edit"; Anchor: (Width: 120, Height: 44, Right: 10); }
+            $Common.@CancelTextButton #DeleteButton3 { @Text = "Delete"; Anchor: (Width: 172, Height: 44); }
+          }
+
+          Group #DeleteConfirmation3 {
+            Anchor: (Width: 690, Height: 62);
+            LayoutMode: Left;
+            Visible: false;
+
+            Label #DeleteConfirmationLabel3 {
+              Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f);
+              FlexWeight: 1;
+              Anchor: (Height: 58, Right: 10);
+              Text: "";
+            }
+
+            $Common.@SecondaryTextButton #CancelDeleteButton3 { @Text = "Cancel"; Anchor: (Width: 120, Height: 44, Right: 10); }
+            $Common.@CancelTextButton #ConfirmDeleteButton3 { @Text = "Confirm delete"; Anchor: (Width: 210, Height: 44); }
+          }
+        }
+        Group #RuleRow4 {
+          Anchor: (Height: 74, Bottom: 6);
+          LayoutMode: Left;
+
+          Group {
+            FlexWeight: 1;
+            Anchor: (Height: 68, Right: 12);
+            LayoutMode: Top;
+            Label #RuleName4 { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 28); Text: "Rule"; }
+            Label #RuleDescription4 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 40); Text: "Rule details"; }
+          }
+
+          Group #RuleActions4 {
+            Anchor: (Width: 302, Height: 50);
+            LayoutMode: Left;
+            $Common.@SecondaryTextButton #EditButton4 { @Text = "Edit"; Anchor: (Width: 120, Height: 44, Right: 10); }
+            $Common.@CancelTextButton #DeleteButton4 { @Text = "Delete"; Anchor: (Width: 172, Height: 44); }
+          }
+
+          Group #DeleteConfirmation4 {
+            Anchor: (Width: 690, Height: 62);
+            LayoutMode: Left;
+            Visible: false;
+
+            Label #DeleteConfirmationLabel4 {
+              Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f);
+              FlexWeight: 1;
+              Anchor: (Height: 58, Right: 10);
+              Text: "";
+            }
+
+            $Common.@SecondaryTextButton #CancelDeleteButton4 { @Text = "Cancel"; Anchor: (Width: 120, Height: 44, Right: 10); }
+            $Common.@CancelTextButton #ConfirmDeleteButton4 { @Text = "Confirm delete"; Anchor: (Width: 210, Height: 44); }
+          }
+        }
+        Group #RuleRow5 {
+          Anchor: (Height: 74, Bottom: 6);
+          LayoutMode: Left;
+
+          Group {
+            FlexWeight: 1;
+            Anchor: (Height: 68, Right: 12);
+            LayoutMode: Top;
+            Label #RuleName5 { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 28); Text: "Rule"; }
+            Label #RuleDescription5 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 40); Text: "Rule details"; }
+          }
+
+          Group #RuleActions5 {
+            Anchor: (Width: 302, Height: 50);
+            LayoutMode: Left;
+            $Common.@SecondaryTextButton #EditButton5 { @Text = "Edit"; Anchor: (Width: 120, Height: 44, Right: 10); }
+            $Common.@CancelTextButton #DeleteButton5 { @Text = "Delete"; Anchor: (Width: 172, Height: 44); }
+          }
+
+          Group #DeleteConfirmation5 {
+            Anchor: (Width: 690, Height: 62);
+            LayoutMode: Left;
+            Visible: false;
+
+            Label #DeleteConfirmationLabel5 {
+              Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f);
+              FlexWeight: 1;
+              Anchor: (Height: 58, Right: 10);
+              Text: "";
+            }
+
+            $Common.@SecondaryTextButton #CancelDeleteButton5 { @Text = "Cancel"; Anchor: (Width: 120, Height: 44, Right: 10); }
+            $Common.@CancelTextButton #ConfirmDeleteButton5 { @Text = "Confirm delete"; Anchor: (Width: 210, Height: 44); }
+          }
+        }
+        Group #RuleRow6 {
+          Anchor: (Height: 74, Bottom: 6);
+          LayoutMode: Left;
+
+          Group {
+            FlexWeight: 1;
+            Anchor: (Height: 68, Right: 12);
+            LayoutMode: Top;
+            Label #RuleName6 { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 28); Text: "Rule"; }
+            Label #RuleDescription6 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 40); Text: "Rule details"; }
+          }
+
+          Group #RuleActions6 {
+            Anchor: (Width: 302, Height: 50);
+            LayoutMode: Left;
+            $Common.@SecondaryTextButton #EditButton6 { @Text = "Edit"; Anchor: (Width: 120, Height: 44, Right: 10); }
+            $Common.@CancelTextButton #DeleteButton6 { @Text = "Delete"; Anchor: (Width: 172, Height: 44); }
+          }
+
+          Group #DeleteConfirmation6 {
+            Anchor: (Width: 690, Height: 62);
+            LayoutMode: Left;
+            Visible: false;
+
+            Label #DeleteConfirmationLabel6 {
+              Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f);
+              FlexWeight: 1;
+              Anchor: (Height: 58, Right: 10);
+              Text: "";
+            }
+
+            $Common.@SecondaryTextButton #CancelDeleteButton6 { @Text = "Cancel"; Anchor: (Width: 120, Height: 44, Right: 10); }
+            $Common.@CancelTextButton #ConfirmDeleteButton6 { @Text = "Confirm delete"; Anchor: (Width: 210, Height: 44); }
+          }
+        }
+        Group #RuleRow7 {
+          Anchor: (Height: 74, Bottom: 6);
+          LayoutMode: Left;
+
+          Group {
+            FlexWeight: 1;
+            Anchor: (Height: 68, Right: 12);
+            LayoutMode: Top;
+            Label #RuleName7 { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 28); Text: "Rule"; }
+            Label #RuleDescription7 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 40); Text: "Rule details"; }
+          }
+
+          Group #RuleActions7 {
+            Anchor: (Width: 302, Height: 50);
+            LayoutMode: Left;
+            $Common.@SecondaryTextButton #EditButton7 { @Text = "Edit"; Anchor: (Width: 120, Height: 44, Right: 10); }
+            $Common.@CancelTextButton #DeleteButton7 { @Text = "Delete"; Anchor: (Width: 172, Height: 44); }
+          }
+
+          Group #DeleteConfirmation7 {
+            Anchor: (Width: 690, Height: 62);
+            LayoutMode: Left;
+            Visible: false;
+
+            Label #DeleteConfirmationLabel7 {
+              Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f);
+              FlexWeight: 1;
+              Anchor: (Height: 58, Right: 10);
+              Text: "";
+            }
+
+            $Common.@SecondaryTextButton #CancelDeleteButton7 { @Text = "Cancel"; Anchor: (Width: 120, Height: 44, Right: 10); }
+            $Common.@CancelTextButton #ConfirmDeleteButton7 { @Text = "Confirm delete"; Anchor: (Width: 210, Height: 44); }
+          }
+        }
+        }
+
+        Group {
+          Anchor: (Height: 48, Top: 8);
+          LayoutMode: Left;
+          $Common.@SecondaryTextButton #PreviousButton { @Text = "Previous"; Anchor: (Width: 150, Height: 42, Right: 10); }
+          Label #PageLabel { Style: (...$Common.@DefaultLabelStyle, HorizontalAlignment: Center, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 42, Right: 10); Text: ""; }
+          $Common.@SecondaryTextButton #NextButton { @Text = "Next"; Anchor: (Width: 150, Height: 42); }
+        }
+      }
+
+      Group #SettingsTabContent {
+        FlexWeight: 1;
+        LayoutMode: Top;
+        Visible: false;
+
+        Group #SettingsScroll {
+          FlexWeight: 1;
+          LayoutMode: TopScrolling;
+          ScrollbarStyle: $Common.@DefaultScrollbarStyle;
+          KeepScrollPosition: true;
+          Padding: (Right: 10);
+
+          Label #GlobalSettingsLabel {
+            Style: $Common.@DefaultLabelStyle;
+            Anchor: (Height: 26, Bottom: 12);
+            Text: "Global settings";
+          }
+
+          Group {
+            Anchor: (Height: 118, Bottom: 12);
+            LayoutMode: Left;
+
+            Group {
+              FlexWeight: 1;
+              Anchor: (Right: 22);
+              LayoutMode: Top;
+
+              Group { Anchor: (Height: 34, Bottom: 4); LayoutMode: Left; $Common.@CheckBox #EnabledCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #EnabledLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Enable StackWise"; } }
+              Group { Anchor: (Height: 34, Bottom: 4); LayoutMode: Left; $Common.@CheckBox #SafeModeCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #SafeModeLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Safe mode for non-stackable items"; } }
+              Group { Anchor: (Height: 34); LayoutMode: Left; $Common.@CheckBox #RespectExternalChangesCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #RespectExternalChangesLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Respect stack changes made by other mods"; } }
+            }
+
+            Group {
+              FlexWeight: 1;
+              LayoutMode: Top;
+
+              Group { Anchor: (Height: 34, Bottom: 4); LayoutMode: Left; $Common.@CheckBox #AllowDecreasesCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #AllowDecreasesLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Allow limits below the original value"; } }
+              Group { Anchor: (Height: 34, Bottom: 4); LayoutMode: Left; $Common.@CheckBox #AllowRuntimeDecreasesCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #AllowRuntimeDecreasesLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Allow live decreases without restart"; } }
+              Group { Anchor: (Height: 34); LayoutMode: Left; $Common.@CheckBox #RestoreUnmatchedCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #RestoreUnmatchedLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Restore items no longer matched by rules"; } }
+            }
+          }
+
+          Group {
+            Anchor: (Height: 52, Bottom: 10);
+            LayoutMode: Left;
+            $Common.@CheckBox #GlobalLimitEnabledCheck { Anchor: (Width: 22, Height: 22, Right: 10); }
+            Label #GlobalLimitEnabledLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); Anchor: (Width: 285, Height: 38, Right: 14); Text: "Enable global stack limit"; }
+            Label #GlobalStackLimitLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); Anchor: (Width: 190, Height: 38, Right: 12); Text: "Global stack limit"; }
+            $Common.@NumberField #GlobalStackLimitInput { Anchor: (Width: 180, Height: 38); Format: (MaxDecimalPlaces: 0, Step: 1, MinValue: 1, MaxValue: 9999); }
+          }
+
+          Group {
+            Anchor: (Height: 52, Bottom: 12);
+            LayoutMode: Left;
+            Label #MaximumStackLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); Anchor: (Width: 285, Height: 38, Right: 12); Text: "Maximum configurable stack"; }
+            $Common.@NumberField #MaximumStackInput { Anchor: (Width: 180, Height: 38); Format: (MaxDecimalPlaces: 0, Step: 1, MinValue: 1, MaxValue: 9999); }
+          }
+
+          $Common.@TextButton #SaveGeneralButton { @Text = "Save settings"; Anchor: (Width: 240, Height: 44); }
+        }
+      }
+
+      Group {
+        Anchor: (Height: 46, Top: 8);
+        LayoutMode: Right;
+        $Common.@CancelTextButton #ClosePageButton { @Text = "Close"; Anchor: (Width: 150, Height: 42); }
+      }
+    }
+  }
+}

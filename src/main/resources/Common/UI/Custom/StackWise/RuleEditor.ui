@@ -1,0 +1,121 @@
+$Common = "../Common.ui";
+
+@BottomDropdownStyle = DropdownBoxStyle(
+  ...$Common.@DefaultDropdownBoxStyle,
+  PanelAlign: Bottom,
+  PanelWidth: 730
+);
+
+$Common.@PageOverlay {
+  LayoutMode: CenterMiddle;
+
+  $Common.@DecoratedContainer {
+    Anchor: (Width: 800, Height: 780);
+
+    #Title {
+      Label #EditorTitle {
+        Style: (...$Common.@DefaultLabelStyle, FontSize: 18, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center);
+        Padding: (Horizontal: 19);
+        Text: "Rule editor";
+      }
+    }
+
+    #Content {
+      LayoutMode: TopScrolling;
+      ScrollbarStyle: $Common.@DefaultScrollbarStyle;
+      KeepScrollPosition: true;
+      Padding: (Top: 16, Bottom: 16, Left: 22, Right: 22);
+
+      Label #RuleIdLabel { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 22, Bottom: 5); Text: "Rule id"; }
+      $Common.@TextField #RuleIdField {
+        Anchor: (Height: 38, Bottom: 12);
+        PlaceholderText: "building-blocks";
+        MaxLength: 64;
+      }
+
+      Label #ActionLabel { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 22, Bottom: 5); Text: "Action"; }
+      $Common.@DropdownBox #ActionDropdown { Anchor: (Width: 730, Height: 32, Bottom: 12); Style: @BottomDropdownStyle; }
+
+      Label #MatchTypeLabel { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 22, Bottom: 5); Text: "Match type"; }
+      $Common.@DropdownBox #MatchTypeDropdown { Anchor: (Width: 730, Height: 32, Bottom: 12); Style: @BottomDropdownStyle; }
+
+      Label #MatchValueLabel { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 22, Bottom: 5); Text: "Item id or pattern"; }
+      $Common.@TextField #MatchValueField {
+        Anchor: (Height: 38, Bottom: 12);
+        PlaceholderText: "Weapon_Arrow";
+        MaxLength: 256;
+      }
+
+      Group {
+        Anchor: (Height: 82, Bottom: 10);
+        LayoutMode: Left;
+
+        Group {
+          FlexWeight: 1;
+          Anchor: (Right: 18);
+          LayoutMode: Top;
+          Label #MaxStackLabel { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 22, Bottom: 5); Text: "Maximum stack"; }
+          $Common.@NumberField #MaxStackInput {
+            Anchor: (Width: 350, Height: 38);
+            Format: (MaxDecimalPlaces: 0, Step: 1, MinValue: 1, MaxValue: 9999);
+          }
+        }
+
+        Group {
+          FlexWeight: 1;
+          LayoutMode: Top;
+          Label #PriorityLabel { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 22, Bottom: 5); Text: "Priority"; }
+          $Common.@NumberField #PriorityInput {
+            Anchor: (Width: 350, Height: 38);
+            Format: (MaxDecimalPlaces: 0, Step: 1, MinValue: -10000, MaxValue: 10000);
+          }
+        }
+      }
+
+      Group {
+        Anchor: (Height: 36, Bottom: 6);
+        LayoutMode: Left;
+        $Common.@CheckBox #EnabledCheck { Anchor: (Width: 22, Height: 22, Right: 10); }
+        Label #EnabledLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Rule enabled"; }
+      }
+
+      Group {
+        Anchor: (Height: 36, Bottom: 10);
+        LayoutMode: Left;
+        $Common.@CheckBox #AllowUnsafeCheck { Anchor: (Width: 22, Height: 22, Right: 10); }
+        Label #AllowUnsafeLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Allow unsafe stacking for originally non-stackable items"; }
+      }
+
+      Label #StatusLabel {
+        Style: (...$Common.@DefaultLabelStyle, Wrap: true);
+        Anchor: (Height: 38, Bottom: 10);
+        Text: "";
+      }
+
+      Group #DeleteConfirmation {
+        Anchor: (Height: 68, Bottom: 10);
+        LayoutMode: Left;
+        Visible: false;
+
+        Label #DeleteConfirmationLabel {
+          Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center);
+          FlexWeight: 1;
+          Anchor: (Height: 60, Right: 12);
+          Text: "";
+        }
+
+        $Common.@SecondaryTextButton #CancelDeleteButton { @Text = "Cancel"; Anchor: (Width: 130, Height: 44, Right: 10); }
+        $Common.@CancelTextButton #ConfirmDeleteButton { @Text = "Confirm delete"; Anchor: (Width: 210, Height: 44); }
+      }
+
+      Group {
+        Anchor: (Height: 50);
+        LayoutMode: Left;
+        $Common.@SecondaryTextButton #BackButton { @Text = "Back"; Anchor: (Width: 140, Height: 44, Right: 10); }
+        $Common.@TextButton #SaveButton { @Text = "Save rule"; Anchor: (Height: 44, Right: 10); FlexWeight: 1; }
+        $Common.@CancelTextButton #DeleteButton { @Text = "Delete"; Anchor: (Width: 170, Height: 44, Right: 10); }
+        $Common.@CancelTextButton #ClosePageButton { @Text = "Close"; Anchor: (Width: 140, Height: 44); }
+      }
+    }
+  }
+}

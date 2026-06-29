@@ -1,0 +1,153 @@
+$Common = "../Common.ui";
+
+$Common.@PageOverlay {
+  LayoutMode: CenterMiddle;
+
+  $Common.@DecoratedContainer {
+    Anchor: (Width: 940, Height: 760);
+
+    #Title {
+      Label #LogTitle {
+        Style: (...$Common.@DefaultLabelStyle, FontSize: 18, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center);
+        Padding: (Horizontal: 19);
+        Text: "Operation log";
+      }
+    }
+
+    #Content {
+      LayoutMode: Top;
+      Padding: (Top: 14, Bottom: 14, Left: 20, Right: 20);
+
+      Label #LogSubtitle {
+        Style: (...$Common.@DefaultLabelStyle, Wrap: true);
+        Anchor: (Height: 50, Bottom: 8);
+        Text: "Details from the latest StackWise operation.";
+      }
+
+      Group {
+        Anchor: (Height: 34, Bottom: 8);
+        LayoutMode: Left;
+        Label #LegendInfo { Style: (...$Common.@DefaultLabelStyle, TextColor: #96a9be, VerticalAlignment: Center); Anchor: (Width: 150, Height: 30, Right: 10); Text: "Info"; }
+        Label #LegendSuccess { Style: (...$Common.@DefaultLabelStyle, TextColor: #72c878, VerticalAlignment: Center); Anchor: (Width: 150, Height: 30, Right: 10); Text: "Success"; }
+        Label #LegendWarning { Style: (...$Common.@DefaultLabelStyle, TextColor: #e9b65f, VerticalAlignment: Center); Anchor: (Width: 150, Height: 30, Right: 10); Text: "Warning"; }
+        Label #LegendError { Style: (...$Common.@DefaultLabelStyle, TextColor: #e56b6f, VerticalAlignment: Center); Anchor: (Width: 150, Height: 30); Text: "Error"; }
+      }
+
+      Group #LogScroll {
+        FlexWeight: 1;
+        LayoutMode: TopScrolling;
+        ScrollbarStyle: $Common.@DefaultScrollbarStyle;
+        KeepScrollPosition: true;
+        Padding: (Right: 10);
+
+        Label #EmptyLabel {
+          Style: (...$Common.@DefaultLabelStyle, HorizontalAlignment: Center, VerticalAlignment: Center);
+          Anchor: (Height: 80);
+          Text: "No operation log is available.";
+          Visible: false;
+        }
+
+        Group #LogRow0 {
+          Anchor: (Height: 58, Bottom: 6);
+          LayoutMode: Full;
+
+          Label #LogInfo0 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #96a9be); Text: ""; }
+          Label #LogSuccess0 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #72c878); Text: ""; Visible: false; }
+          Label #LogWarning0 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f); Text: ""; Visible: false; }
+          Label #LogError0 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e56b6f); Text: ""; Visible: false; }
+        }
+        Group #LogRow1 {
+          Anchor: (Height: 58, Bottom: 6);
+          LayoutMode: Full;
+
+          Label #LogInfo1 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #96a9be); Text: ""; }
+          Label #LogSuccess1 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #72c878); Text: ""; Visible: false; }
+          Label #LogWarning1 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f); Text: ""; Visible: false; }
+          Label #LogError1 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e56b6f); Text: ""; Visible: false; }
+        }
+        Group #LogRow2 {
+          Anchor: (Height: 58, Bottom: 6);
+          LayoutMode: Full;
+
+          Label #LogInfo2 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #96a9be); Text: ""; }
+          Label #LogSuccess2 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #72c878); Text: ""; Visible: false; }
+          Label #LogWarning2 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f); Text: ""; Visible: false; }
+          Label #LogError2 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e56b6f); Text: ""; Visible: false; }
+        }
+        Group #LogRow3 {
+          Anchor: (Height: 58, Bottom: 6);
+          LayoutMode: Full;
+
+          Label #LogInfo3 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #96a9be); Text: ""; }
+          Label #LogSuccess3 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #72c878); Text: ""; Visible: false; }
+          Label #LogWarning3 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f); Text: ""; Visible: false; }
+          Label #LogError3 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e56b6f); Text: ""; Visible: false; }
+        }
+        Group #LogRow4 {
+          Anchor: (Height: 58, Bottom: 6);
+          LayoutMode: Full;
+
+          Label #LogInfo4 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #96a9be); Text: ""; }
+          Label #LogSuccess4 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #72c878); Text: ""; Visible: false; }
+          Label #LogWarning4 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f); Text: ""; Visible: false; }
+          Label #LogError4 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e56b6f); Text: ""; Visible: false; }
+        }
+        Group #LogRow5 {
+          Anchor: (Height: 58, Bottom: 6);
+          LayoutMode: Full;
+
+          Label #LogInfo5 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #96a9be); Text: ""; }
+          Label #LogSuccess5 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #72c878); Text: ""; Visible: false; }
+          Label #LogWarning5 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f); Text: ""; Visible: false; }
+          Label #LogError5 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e56b6f); Text: ""; Visible: false; }
+        }
+        Group #LogRow6 {
+          Anchor: (Height: 58, Bottom: 6);
+          LayoutMode: Full;
+
+          Label #LogInfo6 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #96a9be); Text: ""; }
+          Label #LogSuccess6 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #72c878); Text: ""; Visible: false; }
+          Label #LogWarning6 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f); Text: ""; Visible: false; }
+          Label #LogError6 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e56b6f); Text: ""; Visible: false; }
+        }
+        Group #LogRow7 {
+          Anchor: (Height: 58, Bottom: 6);
+          LayoutMode: Full;
+
+          Label #LogInfo7 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #96a9be); Text: ""; }
+          Label #LogSuccess7 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #72c878); Text: ""; Visible: false; }
+          Label #LogWarning7 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f); Text: ""; Visible: false; }
+          Label #LogError7 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e56b6f); Text: ""; Visible: false; }
+        }
+        Group #LogRow8 {
+          Anchor: (Height: 58, Bottom: 6);
+          LayoutMode: Full;
+
+          Label #LogInfo8 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #96a9be); Text: ""; }
+          Label #LogSuccess8 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #72c878); Text: ""; Visible: false; }
+          Label #LogWarning8 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f); Text: ""; Visible: false; }
+          Label #LogError8 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e56b6f); Text: ""; Visible: false; }
+        }
+        Group #LogRow9 {
+          Anchor: (Height: 58, Bottom: 6);
+          LayoutMode: Full;
+
+          Label #LogInfo9 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #96a9be); Text: ""; }
+          Label #LogSuccess9 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #72c878); Text: ""; Visible: false; }
+          Label #LogWarning9 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f); Text: ""; Visible: false; }
+          Label #LogError9 { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e56b6f); Text: ""; Visible: false; }
+        }
+      }
+
+      Group {
+        Anchor: (Height: 48, Top: 8);
+        LayoutMode: Left;
+        $Common.@SecondaryTextButton #PreviousButton { @Text = "Previous"; Anchor: (Width: 140, Height: 42, Right: 10); }
+        Label #PageLabel { Style: (...$Common.@DefaultLabelStyle, HorizontalAlignment: Center, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 42, Right: 10); Text: ""; }
+        $Common.@SecondaryTextButton #NextButton { @Text = "Next"; Anchor: (Width: 140, Height: 42, Right: 10); }
+        $Common.@SecondaryTextButton #BackButton { @Text = "Back"; Anchor: (Width: 140, Height: 42, Right: 10); }
+        $Common.@CancelTextButton #ClosePageButton { @Text = "Close"; Anchor: (Width: 140, Height: 42); }
+      }
+    }
+  }
+}

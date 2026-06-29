@@ -1,0 +1,82 @@
+{
+  "configVersion": 2,
+  "enabled": true,
+  "globalLimitEnabled": true,
+  "globalStackLimit": 1000,
+  "safeMode": true,
+  "allowDecreases": false,
+  "allowRuntimeDecreases": false,
+  "restoreUnmatchedItems": true,
+  "respectExternalChanges": true,
+  "minimumStack": 1,
+  "maximumStack": 9999,
+  "commands": {
+    "primary": "stackwise",
+    "aliases": [
+      "sw"
+    ],
+    "adminPermission": "stackwise.admin"
+  },
+  "rules": [
+    {
+      "id": "arrows",
+      "enabled": true,
+      "action": "SET",
+      "matchType": "PREFIX",
+      "value": "Weapon_Arrow",
+      "maxStack": 1000,
+      "priority": 600,
+      "allowUnsafe": false
+    },
+    {
+      "id": "sticks",
+      "enabled": true,
+      "action": "SET",
+      "matchType": "EXACT",
+      "value": "Ingredient_Stick",
+      "maxStack": 250,
+      "priority": 500,
+      "allowUnsafe": false
+    },
+    {
+      "id": "seeds",
+      "enabled": true,
+      "action": "SET",
+      "matchType": "GLOB",
+      "value": "Plant_Seeds_*",
+      "maxStack": 250,
+      "priority": 400,
+      "allowUnsafe": false
+    },
+    {
+      "id": "crystal-colors",
+      "enabled": true,
+      "action": "SET",
+      "matchType": "REGEX",
+      "value": "^Ingredient_Crystal_(Cyan|Green|Purple|Red|White)$",
+      "maxStack": 150,
+      "priority": 350,
+      "allowUnsafe": false
+    },
+    {
+      "id": "white-items",
+      "enabled": true,
+      "action": "SET",
+      "matchType": "SUFFIX",
+      "value": "_White",
+      "maxStack": 150,
+      "priority": 300,
+      "allowUnsafe": false
+    },
+    {
+      "id": "exclude-swords",
+      "enabled": true,
+      "action": "EXCLUDE",
+      "matchType": "PREFIX",
+      "value": "Weapon_Sword_",
+      "maxStack": 1,
+      "priority": 1000,
+      "allowUnsafe": false
+    }
+  ]
+}

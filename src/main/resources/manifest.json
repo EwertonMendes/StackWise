@@ -1,0 +1,20 @@
+{
+  "Group": "stackwise",
+  "Name": "StackWise",
+  "Version": "1.0.0",
+  "Description": "Safe, deterministic and configurable item stack limits with an administrative Custom UI.",
+  "ServerVersion": "*",
+  "Authors": [
+    {
+      "Name": "Tblack"
+    }
+  ],
+  "Dependencies": {},
+  "OptionalDependencies": {
+    "LuckPerms:LuckPerms": "*"
+  },
+  "LoadBefore": {},
+  "DisabledByDefault": false,
+  "IncludesAssetPack": true,
+  "Main": "tblack.stackwise.StackWisePlugin"
+}

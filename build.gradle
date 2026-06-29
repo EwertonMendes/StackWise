@@ -1,0 +1,189 @@
+plugins {
+    id 'java'
+    id 'com.gradleup.shadow' version '9.3.1'
+    id 'org.jetbrains.gradle.plugin.idea-ext' version '1.1.8'
+}
+
+import org.gradle.internal.os.OperatingSystem
+
+def userHome = System.getProperty('user.home')
+def hytaleHome = ''
+
+if (project.hasProperty('hytale_home')) {
+    hytaleHome = project.findProperty('hytale_home').toString()
+} else {
+    def os = OperatingSystem.current()
+    if (os.isWindows()) {
+        hytaleHome = "${userHome}/AppData/Roaming/Hytale"
+    } else if (os.isMacOsX()) {
+        hytaleHome = "${userHome}/Library/Application Support/Hytale"
+    } else {
+        hytaleHome = "${userHome}/.local/share/Hytale"
+    }
+}
+
+hytaleHome = hytaleHome.replace('\\', '/')
+
+group = project.findProperty('maven_group')?.toString() ?: 'tblack.stackwise'
+version = project.findProperty('version')?.toString() ?: '1.0.0'
+
+def patchline = (project.findProperty('patchline') ?: 'release').toString()
+def gameDir = "${hytaleHome}/install/${patchline}/package/game/latest"
+def serverJarPath = (project.findProperty('server_jar') ?: "${gameDir}/Server/HytaleServer.jar").toString()
+def assetsPath = (project.findProperty('assets_zip') ?: "${gameDir}/Assets.zip").toString()
+
+def obsoleteProjectFiles = [
+    'src/test/java/tblack/stackwise/stack/TestItemFactory.java',
+    'src/main/resources/Common/UI/Custom/StackWise/RuleEditor.ui.tmp'
+]
+
+def obsoleteConfigFiles = fileTree('src/main/java/tblack/stackwise/config') {
+    include 'Legacy*.java'
+}
+
+tasks.register('removeObsoleteProjectFiles') {
+    outputs.upToDateWhen { false }
+    doLast {
+        obsoleteProjectFiles.each { relativePath ->
+            def obsoleteFile = file(relativePath)
+            try {
+                java.nio.file.Files.deleteIfExists(obsoleteFile.toPath())
+            } catch (Exception ignored) {
+            }
+        }
+        obsoleteConfigFiles.files.each { obsoleteFile ->
+            try {
+                java.nio.file.Files.deleteIfExists(obsoleteFile.toPath())
+            } catch (Exception ignored) {
+            }
+        }
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    shade
+    implementation.extendsFrom(shade)
+}
+
+dependencies {
+    compileOnly files(serverJarPath)
+    compileOnly 'org.checkerframework:checker-qual:3.42.0'
+
+    shade 'com.google.code.gson:gson:2.13.1'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.12.2'
+    testImplementation 'org.mockito:mockito-core:5.17.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.17.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testCompileOnly files(serverJarPath)
+    testRuntimeOnly files(serverJarPath)
+}
+
+sourceSets {
+    main {
+        java {
+            exclude 'tblack/stackwise/config/Legacy*.java'
+        }
+    }
+    test {
+        java {
+            include 'tblack/stackwise/config/ConfigValidatorTest.java'
+            include 'tblack/stackwise/rule/RuleCompilerTest.java'
+            include 'tblack/stackwise/ui/CommonStylingPolicyTest.java'
+            include 'tblack/stackwise/ui/UiContractTest.java'
+            include 'tblack/stackwise/stack/StackApplyServiceTest.java'
+            include 'tblack/stackwise/stack/ReflectionItemStackLimitAdapterTest.java'
+            include 'tblack/stackwise/build/BuildConfigurationTest.java'
+            include 'tblack/stackwise/i18n/LocalizationTest.java'
+            include 'tblack/stackwise/diagnostics/OperationLogServiceTest.java'
+        }
+    }
+}
+
+tasks.named('clean') {
+    dependsOn tasks.named('removeObsoleteProjectFiles')
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn tasks.named('removeObsoleteProjectFiles')
+    options.encoding = 'UTF-8'
+    options.compilerArgs += ['--enable-preview']
+}
+
+tasks.named('processResources') {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.named('jar') {
+    enabled = false
+}
+
+shadowJar {
+    archiveBaseName.set(rootProject.name)
+    archiveClassifier.set('')
+    configurations = [project.configurations.shade]
+    mergeServiceFiles()
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
+}
+
+tasks.build {
+    dependsOn(shadowJar)
+}
+
+test {
+    dependsOn tasks.named('removeObsoleteProjectFiles')
+    useJUnitPlatform()
+    jvmArgs = ['--enable-preview']
+    systemProperty 'stackwise.assetsPath', assetsPath
+}
+
+tasks.register('runServer', JavaExec) {
+    group = 'hytale'
+    description = 'Launch the Hytale server with StackWise loaded.'
+
+    dependsOn(shadowJar)
+    standardInput = System.in
+    classpath = files(serverJarPath)
+    mainClass.set('com.hypixel.hytale.Main')
+
+    def runDir = file("$projectDir/run")
+    def modsDir = file("$runDir/run_mods")
+
+    doFirst {
+        if (!runDir.exists()) runDir.mkdirs()
+        if (!modsDir.exists()) modsDir.mkdirs()
+        modsDir.listFiles()?.each { it.delete() }
+        copy {
+            from(shadowJar.archiveFile)
+            into(modsDir)
+        }
+        println "MOD JAR copied to: ${modsDir.absolutePath}"
+    }
+
+    workingDir = runDir
+
+    args = [
+        '--allow-op',
+        '--disable-sentry',
+        "--assets=${assetsPath}",
+        "--mods=${modsDir.absolutePath}"
+    ]
+
+    jvmArgs = [
+        '--enable-preview',
+        '--enable-native-access=ALL-UNNAMED',
+        '--sun-misc-unsafe-memory-access=allow',
+        '-Xmx2G',
+        '-Dfile.encoding=UTF-8'
+    ]
+}
