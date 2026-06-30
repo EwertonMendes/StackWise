@@ -88,8 +88,12 @@ $Common.@PageOverlay {
           }
 
         Group #RuleRow0 {
-          Anchor: (Height: 74, Bottom: 6);
+          Anchor: (Height: 78, Bottom: 8);
           LayoutMode: Left;
+          Padding: (Top: 4, Bottom: 4, Left: 12, Right: 12);
+          Background: #1d3044(0.78);
+          OutlineColor: #45617d(0.85);
+          OutlineSize: 1;
 
           Group {
             FlexWeight: 1;
@@ -123,8 +127,12 @@ $Common.@PageOverlay {
           }
         }
         Group #RuleRow1 {
-          Anchor: (Height: 74, Bottom: 6);
+          Anchor: (Height: 78, Bottom: 8);
           LayoutMode: Left;
+          Padding: (Top: 4, Bottom: 4, Left: 12, Right: 12);
+          Background: #1d3044(0.78);
+          OutlineColor: #45617d(0.85);
+          OutlineSize: 1;
 
           Group {
             FlexWeight: 1;
@@ -158,8 +166,12 @@ $Common.@PageOverlay {
           }
         }
         Group #RuleRow2 {
-          Anchor: (Height: 74, Bottom: 6);
+          Anchor: (Height: 78, Bottom: 8);
           LayoutMode: Left;
+          Padding: (Top: 4, Bottom: 4, Left: 12, Right: 12);
+          Background: #1d3044(0.78);
+          OutlineColor: #45617d(0.85);
+          OutlineSize: 1;
 
           Group {
             FlexWeight: 1;
@@ -193,8 +205,12 @@ $Common.@PageOverlay {
           }
         }
         Group #RuleRow3 {
-          Anchor: (Height: 74, Bottom: 6);
+          Anchor: (Height: 78, Bottom: 8);
           LayoutMode: Left;
+          Padding: (Top: 4, Bottom: 4, Left: 12, Right: 12);
+          Background: #1d3044(0.78);
+          OutlineColor: #45617d(0.85);
+          OutlineSize: 1;
 
           Group {
             FlexWeight: 1;
@@ -228,8 +244,12 @@ $Common.@PageOverlay {
           }
         }
         Group #RuleRow4 {
-          Anchor: (Height: 74, Bottom: 6);
+          Anchor: (Height: 78, Bottom: 8);
           LayoutMode: Left;
+          Padding: (Top: 4, Bottom: 4, Left: 12, Right: 12);
+          Background: #1d3044(0.78);
+          OutlineColor: #45617d(0.85);
+          OutlineSize: 1;
 
           Group {
             FlexWeight: 1;
@@ -263,8 +283,12 @@ $Common.@PageOverlay {
           }
         }
         Group #RuleRow5 {
-          Anchor: (Height: 74, Bottom: 6);
+          Anchor: (Height: 78, Bottom: 8);
           LayoutMode: Left;
+          Padding: (Top: 4, Bottom: 4, Left: 12, Right: 12);
+          Background: #1d3044(0.78);
+          OutlineColor: #45617d(0.85);
+          OutlineSize: 1;
 
           Group {
             FlexWeight: 1;
@@ -298,8 +322,12 @@ $Common.@PageOverlay {
           }
         }
         Group #RuleRow6 {
-          Anchor: (Height: 74, Bottom: 6);
+          Anchor: (Height: 78, Bottom: 8);
           LayoutMode: Left;
+          Padding: (Top: 4, Bottom: 4, Left: 12, Right: 12);
+          Background: #1d3044(0.78);
+          OutlineColor: #45617d(0.85);
+          OutlineSize: 1;
 
           Group {
             FlexWeight: 1;
@@ -333,8 +361,12 @@ $Common.@PageOverlay {
           }
         }
         Group #RuleRow7 {
-          Anchor: (Height: 74, Bottom: 6);
+          Anchor: (Height: 78, Bottom: 8);
           LayoutMode: Left;
+          Padding: (Top: 4, Bottom: 4, Left: 12, Right: 12);
+          Background: #1d3044(0.78);
+          OutlineColor: #45617d(0.85);
+          OutlineSize: 1;
 
           Group {
             FlexWeight: 1;
