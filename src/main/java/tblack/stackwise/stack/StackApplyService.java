@@ -1,57 +1,44 @@
 package tblack.stackwise.stack;
 
+import tblack.stackwise.StackWisePlugin;
 import tblack.stackwise.config.StackWiseConfig;
 import tblack.stackwise.rule.CompiledRuleSet;
-import tblack.stackwise.rule.RuleAction;
 import tblack.stackwise.rule.RuleCompiler;
 import tblack.stackwise.rule.RuleResolution;
 import tblack.stackwise.rule.StackRule;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 public final class StackApplyService {
     private static final String GLOBAL_SOURCE = "@global";
+
     private final ItemStackLimitAdapter adapter;
     private final RuleCompiler compiler = new RuleCompiler();
     private final ItemSafetyClassifier safetyClassifier = new ItemSafetyClassifier();
-    private final Map<String, Integer> originalLimits = new LinkedHashMap<>();
-    private final Map<String, Integer> lastApplied = new LinkedHashMap<>();
-    private final Map<String, String> lastAppliedSources = new LinkedHashMap<>();
-    private final Map<String, Object> originalOwners = new LinkedHashMap<>();
+    private final Map<String, ItemState> states = new LinkedHashMap<>();
     private Map<String, Object> currentAssets = Map.of();
     private Map<String, Integer> lastMatchCounts = Map.of();
-    private StackWiseConfig currentConfig;
     private StackApplyReport lastReport = new StackApplyReport();
 
-    public StackApplyService(ItemStackLimitAdapter adapter, StackWiseConfig initialConfig) {
+    public StackApplyService(ItemStackLimitAdapter adapter) {
         this.adapter = adapter;
-        this.currentConfig = initialConfig;
     }
 
     public synchronized StackApplyReport onAssetsLoaded(Map<String, ?> assets, StackWiseConfig config) {
         currentAssets = assets == null ? Map.of() : new LinkedHashMap<>(assets);
-        originalLimits.keySet().retainAll(currentAssets.keySet());
-        lastApplied.keySet().retainAll(currentAssets.keySet());
-        lastAppliedSources.keySet().retainAll(currentAssets.keySet());
-        originalOwners.keySet().retainAll(currentAssets.keySet());
+        states.keySet().retainAll(currentAssets.keySet());
         for (Map.Entry<String, Object> entry : currentAssets.entrySet()) {
-            Object previous = originalOwners.put(entry.getKey(), entry.getValue());
-            if (previous == entry.getValue()) continue;
-            originalLimits.remove(entry.getKey());
-            lastApplied.remove(entry.getKey());
-            lastAppliedSources.remove(entry.getKey());
+            ItemState state = states.get(entry.getKey());
+            if (state != null && state.asset == entry.getValue()) continue;
+            states.remove(entry.getKey());
         }
-        currentConfig = config;
         lastReport = apply(config, false);
         return lastReport;
     }
 
     public synchronized StackApplyReport applyRuntime(StackWiseConfig config) {
-        currentConfig = config;
         lastReport = apply(config, true);
         return lastReport;
     }
@@ -65,56 +52,6 @@ public final class StackApplyService {
         return lastMatchCounts.getOrDefault(ruleId, 0);
     }
 
-    public synchronized ItemCatalogExport catalogExport() {
-        List<ItemCatalogEntry> entries = catalog();
-        return new ItemCatalogExport(1, entries.size(), entries);
-    }
-
-    public synchronized List<ItemCatalogEntry> catalog() {
-        List<ItemCatalogEntry> entries = new ArrayList<>();
-        CompiledRuleSet rules = currentConfig == null ? null : compiler.compile(currentConfig);
-        currentAssets.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(entry -> {
-            try {
-                String id = entry.getKey();
-                Object item = entry.getValue();
-                int current = adapter.read(item);
-                int original = originalLimits.getOrDefault(id, current);
-                RuleResolution resolution = rules == null ? RuleResolution.none() : rules.resolve(id);
-                StackRule rule = resolution.rule();
-                boolean global = currentConfig != null
-                        && currentConfig.enabled
-                        && currentConfig.globalLimitEnabled
-                        && !resolution.matched()
-                        && original > 1;
-                String unsafeReason = safetyClassifier.unsafeReason(item, original);
-                String status = resolution.excluded()
-                        ? "EXCLUDED"
-                        : resolution.matched()
-                        ? "MATCHED"
-                        : global
-                        ? "GLOBAL"
-                        : "UNMATCHED";
-                Integer target = null;
-                if (rule != null && rule.action == RuleAction.SET) target = rule.maxStack;
-                else if (global) target = currentConfig.globalStackLimit;
-                entries.add(new ItemCatalogEntry(
-                        id,
-                        original,
-                        current,
-                        target,
-                        rule == null ? null : rule.id,
-                        rule == null ? global ? "GLOBAL" : null : rule.action.name(),
-                        rule == null ? null : rule.matchType.name(),
-                        rule == null ? null : rule.value,
-                        status,
-                        unsafeReason
-                ));
-            } catch (ReflectiveOperationException ignored) {
-            }
-        });
-        return entries;
-    }
-
     public synchronized int assetCount() {
         return currentAssets.size();
     }
@@ -123,49 +60,68 @@ public final class StackApplyService {
         StackApplyReport report = new StackApplyReport();
         report.adapterAvailable = adapter.isAvailable();
         report.adapterDescription = adapter.description();
-        if (!report.adapterAvailable || currentAssets.isEmpty()) {
+        if (!report.adapterAvailable) {
+            lastMatchCounts = Map.of();
+            StackWisePlugin.LOGGER.atSevere().log("StackWise could not access the Hytale item stack limit field: %s", report.adapterDescription);
+            return report;
+        }
+        if (currentAssets.isEmpty()) {
             lastMatchCounts = Map.of();
             return report;
         }
 
         CompiledRuleSet rules = compiler.compile(config);
-        List<Map.Entry<String, Object>> assets = currentAssets.entrySet().stream()
+        currentAssets.entrySet().stream()
                 .sorted(Comparator.comparing(Map.Entry::getKey))
-                .toList();
-
-        for (Map.Entry<String, Object> entry : assets) {
-            applyItem(entry.getKey(), entry.getValue(), config, rules, runtime, report);
-        }
+                .forEach(entry -> applyItem(entry.getKey(), entry.getValue(), config, rules, runtime, report));
         lastMatchCounts = new LinkedHashMap<>(rules.matchCounts());
         return report;
     }
 
-    private void applyItem(String itemId, Object item, StackWiseConfig config, CompiledRuleSet rules, boolean runtime, StackApplyReport report) {
+    private void applyItem(
+            String itemId,
+            Object item,
+            StackWiseConfig config,
+            CompiledRuleSet rules,
+            boolean runtime,
+            StackApplyReport report
+    ) {
         report.scanned++;
         try {
             int current = adapter.read(item);
-            int original = originalLimits.computeIfAbsent(itemId, ignored -> current);
-            Integer previousApplied = lastApplied.get(itemId);
-
-            if (previousApplied != null && current != previousApplied && config.respectExternalChanges) {
-                report.externalConflict++;
-                report.addChange(new StackChange(itemId, original, current, current, current, null, "external-conflict"));
+            ItemState state = stateFor(itemId, item, current);
+            if (state.externalControl && config.respectExternalChanges) {
+                state.baseline = current;
+                report.unchanged++;
+                return;
+            }
+            if (state.externalControl) {
+                state.externalControl = false;
+                state.baseline = current;
+            }
+            if (hasExternalChange(state, current)) {
+                if (config.respectExternalChanges) {
+                    releaseToExternalControl(itemId, state, current, report);
+                    return;
+                }
+            }
+            if (!config.enabled) {
+                restoreOwnedValue(itemId, item, state, current, config, runtime, true, null, report);
                 return;
             }
 
-            RuleResolution resolution = config.enabled ? rules.resolve(itemId) : RuleResolution.none();
+            RuleResolution resolution = rules.resolve(itemId);
             if (resolution.excluded()) {
                 report.excluded++;
-                restoreIfNeeded(itemId, item, original, current, previousApplied, config, runtime, report, resolution.rule());
+                restoreOwnedValue(itemId, item, state, current, config, runtime, true, resolution.rule(), report);
                 return;
             }
-
             if (resolution.matched()) {
                 StackRule rule = resolution.rule();
                 applyRequestedValue(
                         itemId,
                         item,
-                        original,
+                        state,
                         current,
                         rule.maxStack,
                         rule.id,
@@ -176,12 +132,11 @@ public final class StackApplyService {
                 );
                 return;
             }
-
-            if (config.enabled && config.globalLimitEnabled && original > 1) {
+            if (config.globalLimitEnabled && state.baseline > 1) {
                 applyRequestedValue(
                         itemId,
                         item,
-                        original,
+                        state,
                         current,
                         config.globalStackLimit,
                         GLOBAL_SOURCE,
@@ -193,94 +148,217 @@ public final class StackApplyService {
                 return;
             }
 
-            restoreIfNeeded(itemId, item, original, current, previousApplied, config, runtime, report, null);
+            boolean globalWasDisabled = GLOBAL_SOURCE.equals(state.source) && !config.globalLimitEnabled;
+            restoreOwnedValue(itemId, item, state, current, config, runtime, globalWasDisabled, null, report);
         } catch (ReflectiveOperationException | RuntimeException exception) {
             report.failures++;
-            String message = exception.getMessage();
-            String detail = exception.getClass().getSimpleName()
-                    + (message == null || message.isBlank() ? "" : ": " + message);
-            report.addChange(new StackChange(itemId, 0, 0, 0, 0, null, "failure", detail));
+            report.addChange(new StackChange(itemId, 0, 0, 0, 0, null, "failure"));
+            StackWisePlugin.LOGGER.atSevere().withCause(exception).log("StackWise failed to process item %s", itemId);
         }
+    }
+
+    private ItemState stateFor(String itemId, Object item, int current) {
+        ItemState state = states.get(itemId);
+        if (state != null && state.asset == item) return state;
+        ItemState created = new ItemState(item, current);
+        states.put(itemId, created);
+        return created;
+    }
+
+    private boolean hasExternalChange(ItemState state, int current) {
+        return state.lastApplied != null && current != state.lastApplied;
+    }
+
+    private void releaseToExternalControl(String itemId, ItemState state, int current, StackApplyReport report) {
+        int original = state.baseline;
+        state.baseline = current;
+        state.lastApplied = null;
+        state.source = null;
+        state.externalControl = true;
+        report.externalConflict++;
+        report.addChange(new StackChange(itemId, original, current, current, current, null, "external-conflict"));
     }
 
     private void applyRequestedValue(
             String itemId,
             Object item,
-            int original,
+            ItemState state,
             int current,
             int requested,
-            String ruleId,
+            String source,
             boolean allowUnsafe,
             StackWiseConfig config,
             boolean runtime,
             StackApplyReport report
     ) throws ReflectiveOperationException {
         report.matched++;
-        String unsafeReason = safetyClassifier.unsafeReason(item, original);
-        if (config.safeMode && requested > original && unsafeReason != null && !allowUnsafe) {
+        String unsafeReason = safetyClassifier.unsafeReason(item, state.baseline);
+        if (config.safeMode && requested > state.baseline && unsafeReason != null && !allowUnsafe) {
             report.unsafeBlocked++;
-            report.addChange(new StackChange(itemId, original, current, requested, current, ruleId, "unsafe-blocked:" + unsafeReason));
+            report.addChange(new StackChange(
+                    itemId,
+                    state.baseline,
+                    current,
+                    requested,
+                    current,
+                    source,
+                    "unsafe-blocked:" + unsafeReason
+            ));
             return;
         }
-        if (requested < original && !config.allowDecreases) {
+        if (requested < state.baseline && !config.allowDecreases) {
             report.decreaseBlocked++;
-            report.addChange(new StackChange(itemId, original, current, requested, current, ruleId, "below-original-blocked"));
+            report.addChange(new StackChange(
+                    itemId,
+                    state.baseline,
+                    current,
+                    requested,
+                    current,
+                    source,
+                    "below-original-blocked"
+            ));
             return;
         }
         if (runtime && requested < current && !config.allowRuntimeDecreases) {
             report.restartRequired++;
-            report.addChange(new StackChange(itemId, original, current, requested, current, ruleId, "restart-required"));
+            report.addChange(new StackChange(
+                    itemId,
+                    state.baseline,
+                    current,
+                    requested,
+                    current,
+                    source,
+                    "restart-required"
+            ));
             return;
         }
-        applyValue(itemId, item, original, current, requested, ruleId, report);
+        applyValue(itemId, item, state, current, requested, source, report);
     }
 
-    private void restoreIfNeeded(
+    private void restoreOwnedValue(
             String itemId,
             Object item,
-            int original,
+            ItemState state,
             int current,
-            Integer previousApplied,
             StackWiseConfig config,
             boolean runtime,
-            StackApplyReport report,
-            StackRule rule
+            boolean force,
+            StackRule rule,
+            StackApplyReport report
     ) throws ReflectiveOperationException {
-        boolean forceRestore = !config.enabled
-                || (GLOBAL_SOURCE.equals(lastAppliedSources.get(itemId)) && !config.globalLimitEnabled);
-        if ((!config.restoreUnmatchedItems && !forceRestore) || previousApplied == null) {
+        if (state.lastApplied == null) {
             report.unchanged++;
             return;
         }
-        if (runtime && original < current && !config.allowRuntimeDecreases) {
-            report.restartRequired++;
-            report.addChange(new StackChange(itemId, original, current, original, current, rule == null ? null : rule.id, "restart-required"));
+        if (!force && !config.restoreUnmatchedItems) {
+            report.unchanged++;
             return;
         }
-        applyValue(itemId, item, original, current, original, rule == null ? null : rule.id, report);
-        lastApplied.remove(itemId);
-        lastAppliedSources.remove(itemId);
+        if (!force && runtime && state.baseline < current && !config.allowRuntimeDecreases) {
+            report.restartRequired++;
+            report.addChange(new StackChange(
+                    itemId,
+                    state.baseline,
+                    current,
+                    state.baseline,
+                    current,
+                    rule == null ? null : rule.id,
+                    "restart-required"
+            ));
+            return;
+        }
+        restoreValue(itemId, item, state, current, rule == null ? null : rule.id, report);
     }
 
-    private void applyValue(String itemId, Object item, int original, int current, int requested, String ruleId, StackApplyReport report) throws ReflectiveOperationException {
+    private void restoreValue(
+            String itemId,
+            Object item,
+            ItemState state,
+            int current,
+            String ruleId,
+            StackApplyReport report
+    ) throws ReflectiveOperationException {
+        if (current == state.baseline) {
+            report.unchanged++;
+            state.release();
+            return;
+        }
+        adapter.write(item, state.baseline);
+        int applied = adapter.read(item);
+        if (applied != state.baseline) {
+            report.failures++;
+            report.addChange(new StackChange(
+                    itemId,
+                    state.baseline,
+                    current,
+                    state.baseline,
+                    applied,
+                    ruleId,
+                    "verification-failed"
+            ));
+            return;
+        }
+        report.changed++;
+        report.addChange(new StackChange(itemId, state.baseline, current, state.baseline, applied, ruleId, "changed"));
+        state.release();
+    }
+
+    private void applyValue(
+            String itemId,
+            Object item,
+            ItemState state,
+            int current,
+            int requested,
+            String source,
+            StackApplyReport report
+    ) throws ReflectiveOperationException {
         if (current == requested) {
             report.unchanged++;
-            lastApplied.put(itemId, requested);
-            if (ruleId != null) lastAppliedSources.put(itemId, ruleId);
-            else lastAppliedSources.remove(itemId);
+            state.claim(requested, source);
             return;
         }
         adapter.write(item, requested);
         int applied = adapter.read(item);
         if (applied != requested) {
             report.failures++;
-            report.addChange(new StackChange(itemId, original, current, requested, applied, ruleId, "verification-failed"));
+            report.addChange(new StackChange(
+                    itemId,
+                    state.baseline,
+                    current,
+                    requested,
+                    applied,
+                    source,
+                    "verification-failed"
+            ));
             return;
         }
         report.changed++;
-        lastApplied.put(itemId, applied);
-        if (ruleId != null) lastAppliedSources.put(itemId, ruleId);
-        else lastAppliedSources.remove(itemId);
-        report.addChange(new StackChange(itemId, original, current, requested, applied, ruleId, "changed"));
+        state.claim(applied, source);
+        report.addChange(new StackChange(itemId, state.baseline, current, requested, applied, source, "changed"));
+    }
+
+    private static final class ItemState {
+        private final Object asset;
+        private int baseline;
+        private Integer lastApplied;
+        private String source;
+        private boolean externalControl;
+
+        private ItemState(Object asset, int baseline) {
+            this.asset = asset;
+            this.baseline = baseline;
+        }
+
+        private void claim(int value, String source) {
+            lastApplied = value;
+            this.source = source;
+            externalControl = false;
+        }
+
+        private void release() {
+            lastApplied = null;
+            source = null;
+            externalControl = false;
+        }
     }
 }

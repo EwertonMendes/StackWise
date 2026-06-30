@@ -98,6 +98,7 @@ sourceSets {
     test {
         java {
             include 'tblack/stackwise/config/ConfigValidatorTest.java'
+            include 'tblack/stackwise/config/ConfigManagerTest.java'
             include 'tblack/stackwise/rule/RuleCompilerTest.java'
             include 'tblack/stackwise/ui/CommonStylingPolicyTest.java'
             include 'tblack/stackwise/ui/UiContractTest.java'
@@ -106,6 +107,7 @@ sourceSets {
             include 'tblack/stackwise/build/BuildConfigurationTest.java'
             include 'tblack/stackwise/i18n/LocalizationTest.java'
             include 'tblack/stackwise/diagnostics/OperationLogServiceTest.java'
+            include 'tblack/stackwise/migration/OverstackedRuleMigrationTest.java'
         }
     }
 }

@@ -26,6 +26,8 @@ $Common.@PageOverlay {
         $Common.@SecondaryTextButton #RulesTabInactive { @Text = "Rules"; Anchor: (Width: 220, Height: 42, Right: 8); Visible: false; }
         $Common.@TextButton #SettingsTabActive { @Text = "Global settings"; Anchor: (Width: 220, Height: 42); Visible: false; }
         $Common.@SecondaryTextButton #SettingsTabInactive { @Text = "Global settings"; Anchor: (Width: 220, Height: 42); }
+        Group { FlexWeight: 1; }
+        $Common.@SecondaryTextButton #ViewLogButton { @Text = "View log"; Anchor: (Width: 160, Height: 42); }
       }
 
       Group #StatusGroup {
@@ -37,23 +39,6 @@ $Common.@PageOverlay {
         Label #StatusSuccessLabel { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #72c878); Text: ""; Visible: false; }
         Label #StatusWarningLabel { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f); Text: ""; Visible: false; }
         Label #StatusErrorLabel { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e56b6f); Text: ""; Visible: false; }
-      }
-
-      Group #ReportBar {
-        Anchor: (Height: 50, Bottom: 8);
-        LayoutMode: Left;
-
-        Group {
-          FlexWeight: 1;
-          Anchor: (Height: 46, Right: 10);
-          LayoutMode: Full;
-          Label #ReportInfoLabel { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #96a9be); Text: ""; }
-          Label #ReportSuccessLabel { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #72c878); Text: ""; Visible: false; }
-          Label #ReportWarningLabel { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f); Text: ""; Visible: false; }
-          Label #ReportErrorLabel { Anchor: (Full: 0); Style: (...$Common.@DefaultLabelStyle, Wrap: true, VerticalAlignment: Center, TextColor: #e56b6f); Text: ""; Visible: false; }
-        }
-
-        $Common.@SecondaryTextButton #ViewLogButton { @Text = "View log"; Anchor: (Width: 160, Height: 42); }
       }
 
       Group #RulesTabContent {
@@ -86,8 +71,7 @@ $Common.@PageOverlay {
           LayoutMode: Left;
 
           $Common.@TextButton #NewRuleButton { @Text = "New rule"; Anchor: (Width: 170, Height: 42, Right: 8); }
-          $Common.@SecondaryTextButton #ReloadButton { @Text = "Reload JSON"; Anchor: (Width: 190, Height: 42, Right: 8); }
-          $Common.@SecondaryTextButton #ExportButton { @Text = "Export item catalog"; Anchor: (Width: 250, Height: 42); }
+          $Common.@SecondaryTextButton #ReloadButton { @Text = "Reload JSON"; Anchor: (Width: 190, Height: 42); }
         }
 
         Group #RulesScroll {
@@ -413,7 +397,7 @@ $Common.@PageOverlay {
           }
 
           Group {
-            Anchor: (Height: 118, Bottom: 12);
+            Anchor: (Height: 158, Bottom: 12);
             LayoutMode: Left;
 
             Group {
@@ -421,7 +405,8 @@ $Common.@PageOverlay {
               Anchor: (Right: 22);
               LayoutMode: Top;
 
-              Group { Anchor: (Height: 34, Bottom: 4); LayoutMode: Left; $Common.@CheckBox #EnabledCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #EnabledLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Enable StackWise"; } }
+              Group { Anchor: (Height: 34, Bottom: 2); LayoutMode: Left; $Common.@CheckBox #EnabledCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #EnabledLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Enable StackWise"; } }
+              Label #EnabledHintLabel { Style: (...$Common.@DefaultLabelStyle, FontSize: 13, Wrap: true, TextColor: #8398ad); Padding: (Left: 32, Right: 8); Anchor: (Height: 42, Bottom: 4); Text: "Disabling may require a restart."; }
               Group { Anchor: (Height: 34, Bottom: 4); LayoutMode: Left; $Common.@CheckBox #SafeModeCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #SafeModeLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Safe mode for non-stackable items"; } }
               Group { Anchor: (Height: 34); LayoutMode: Left; $Common.@CheckBox #RespectExternalChangesCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #RespectExternalChangesLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Respect stack changes made by other mods"; } }
             }
@@ -442,14 +427,7 @@ $Common.@PageOverlay {
             $Common.@CheckBox #GlobalLimitEnabledCheck { Anchor: (Width: 22, Height: 22, Right: 10); }
             Label #GlobalLimitEnabledLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); Anchor: (Width: 285, Height: 38, Right: 14); Text: "Enable global stack limit"; }
             Label #GlobalStackLimitLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); Anchor: (Width: 190, Height: 38, Right: 12); Text: "Global stack limit"; }
-            $Common.@NumberField #GlobalStackLimitInput { Anchor: (Width: 180, Height: 38); Format: (MaxDecimalPlaces: 0, Step: 1, MinValue: 1, MaxValue: 9999); }
-          }
-
-          Group {
-            Anchor: (Height: 52, Bottom: 12);
-            LayoutMode: Left;
-            Label #MaximumStackLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); Anchor: (Width: 285, Height: 38, Right: 12); Text: "Maximum configurable stack"; }
-            $Common.@NumberField #MaximumStackInput { Anchor: (Width: 180, Height: 38); Format: (MaxDecimalPlaces: 0, Step: 1, MinValue: 1, MaxValue: 9999); }
+            $Common.@NumberField #GlobalStackLimitInput { Anchor: (Width: 180, Height: 38); Format: (MaxDecimalPlaces: 0, Step: 1, MinValue: 1, MaxValue: 999999); }
           }
 
           $Common.@TextButton #SaveGeneralButton { @Text = "Save settings"; Anchor: (Width: 240, Height: 44); }

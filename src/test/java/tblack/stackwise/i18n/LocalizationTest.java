@@ -94,10 +94,14 @@ class LocalizationTest {
 
         assertTrue(english.containsKey("stackwise.commands.root.description"));
         assertTrue(english.containsKey("stackwise.messages.report"));
+        assertTrue(english.containsKey("stackwise.commands.import.description"));
+        assertTrue(english.containsKey("stackwise.commands.import.overstacked.description"));
+        assertTrue(english.containsKey("stackwise.messages.import_success"));
         assertTrue(english.containsKey("stackwise.validation.invalid_regex"));
         assertTrue(english.containsKey("stackwise.ui.admin.search_placeholder"));
         assertTrue(english.containsKey("stackwise.ui.admin.global_limit_enabled"));
         assertTrue(english.containsKey("stackwise.ui.admin.global_stack_limit"));
+        assertTrue(english.containsKey("stackwise.ui.admin.enabled_hint"));
         assertTrue(english.containsKey("stackwise.ui.admin.delete_confirmation"));
         assertTrue(english.containsKey("stackwise.ui.admin.tab_rules"));
         assertTrue(english.containsKey("stackwise.ui.admin.tab_settings"));
@@ -108,6 +112,30 @@ class LocalizationTest {
         assertTrue(english.containsKey("stackwise.ui.action.set"));
         assertTrue(english.containsKey("stackwise.ui.action.exclude"));
         assertTrue(english.containsKey("stackwise.ui.match_type.regex"));
+    }
+
+
+    @Test
+    void translatedMessagesKeepTheSamePlaceholders() throws IOException {
+        Properties english = load("en-US");
+        Pattern placeholder = Pattern.compile("\\{(\\d+)}");
+        for (String locale : LOCALES) {
+            Properties translated = load(locale);
+            for (String key : english.stringPropertyNames()) {
+                assertEquals(
+                        placeholders(english.getProperty(key), placeholder),
+                        placeholders(translated.getProperty(key), placeholder),
+                        locale + " " + key
+                );
+            }
+        }
+    }
+
+    private Set<String> placeholders(String value, Pattern pattern) {
+        Set<String> placeholders = new HashSet<>();
+        Matcher matcher = pattern.matcher(value);
+        while (matcher.find()) placeholders.add(matcher.group(1));
+        return placeholders;
     }
 
     private Properties load(String locale) throws IOException {

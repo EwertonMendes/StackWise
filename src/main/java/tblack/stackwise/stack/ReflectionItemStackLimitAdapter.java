@@ -32,7 +32,7 @@ public final class ReflectionItemStackLimitAdapter implements ItemStackLimitAdap
     @Override
     public synchronized int read(Object item) throws ReflectiveOperationException {
         requireItem(item);
-        resolve(item.getClass());
+        resolve(resolveType(item));
         if (getter != null) return ((Number) getter.invoke(item)).intValue();
         if (field != null) return ((Number) field.get(item)).intValue();
         throw new NoSuchFieldException("No supported max stack accessor was found");
@@ -41,7 +41,7 @@ public final class ReflectionItemStackLimitAdapter implements ItemStackLimitAdap
     @Override
     public synchronized void write(Object item, int value) throws ReflectiveOperationException {
         requireItem(item);
-        resolve(item.getClass());
+        resolve(resolveType(item));
         if (setter != null) setter.invoke(item, value);
         else if (field != null) field.set(item, value);
         else throw new NoSuchFieldException("No supported max stack mutator was found");
@@ -67,11 +67,12 @@ public final class ReflectionItemStackLimitAdapter implements ItemStackLimitAdap
         }
     }
 
+    private Class<?> resolveType(Object item) {
+        return expectedType == null ? item.getClass() : expectedType;
+    }
+
     private void resolve(Class<?> type) {
-        if (resolvedType == type) return;
-        if (resolvedType != null && resolvedType != type) {
-            throw new IllegalStateException("Adapter already resolved for " + resolvedType.getName());
-        }
+        if (resolvedType != null) return;
         resolvedType = type;
         getter = findGetter(type);
         setter = findSetter(type);
@@ -86,51 +87,40 @@ public final class ReflectionItemStackLimitAdapter implements ItemStackLimitAdap
 
     private Method findGetter(Class<?> type) {
         for (String name : GETTER_NAMES) {
-            Class<?> current = type;
-            while (current != null) {
-                try {
-                    Method method = current.getDeclaredMethod(name);
-                    if (Modifier.isStatic(method.getModifiers())) break;
-                    if (!Number.class.isAssignableFrom(box(method.getReturnType()))) break;
-                    if (!method.trySetAccessible()) break;
-                    return method;
-                } catch (NoSuchMethodException ignored) {
-                    current = current.getSuperclass();
-                }
-            }
+            Method method = findMethod(type, name);
+            if (method == null) continue;
+            if (!Number.class.isAssignableFrom(box(method.getReturnType()))) continue;
+            return method;
         }
         return null;
     }
 
     private Method findSetter(Class<?> type) {
         for (String name : SETTER_NAMES) {
-            Class<?> current = type;
-            while (current != null) {
-                try {
-                    Method method = current.getDeclaredMethod(name, int.class);
-                    if (Modifier.isStatic(method.getModifiers())) break;
-                    if (!method.trySetAccessible()) break;
-                    return method;
-                } catch (NoSuchMethodException ignored) {
-                    current = current.getSuperclass();
-                }
-            }
+            Method method = findMethod(type, name, int.class);
+            if (method != null) return method;
         }
         return null;
     }
 
     private Method findNoArgumentMethod(Class<?> type, List<String> names) {
         for (String name : names) {
-            Class<?> current = type;
-            while (current != null) {
-                try {
-                    Method method = current.getDeclaredMethod(name);
-                    if (Modifier.isStatic(method.getModifiers())) break;
-                    if (!method.trySetAccessible()) break;
-                    return method;
-                } catch (NoSuchMethodException ignored) {
-                    current = current.getSuperclass();
-                }
+            Method method = findMethod(type, name);
+            if (method != null) return method;
+        }
+        return null;
+    }
+
+    private Method findMethod(Class<?> type, String name, Class<?>... parameters) {
+        Class<?> current = type;
+        while (current != null) {
+            try {
+                Method method = current.getDeclaredMethod(name, parameters);
+                if (Modifier.isStatic(method.getModifiers())) return null;
+                if (!method.trySetAccessible()) return null;
+                return method;
+            } catch (NoSuchMethodException ignored) {
+                current = current.getSuperclass();
             }
         }
         return null;

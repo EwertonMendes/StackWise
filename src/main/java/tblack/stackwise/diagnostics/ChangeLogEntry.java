@@ -8,10 +8,7 @@ public record ChangeLogEntry(LogSeverity severity, StackChange change) implement
     public String translated(String locale) {
         String outcome = change.outcome() == null ? "" : change.outcome();
         if (outcome.startsWith("failure")) {
-            String detail = change.detail() == null || change.detail().isBlank()
-                    ? I18n.translate(locale, "ui.log.unknown_failure")
-                    : change.detail();
-            return I18n.translate(locale, "ui.log.item_failure", change.itemId(), detail);
+            return I18n.translate(locale, "ui.log.item_failure", change.itemId());
         }
         if (outcome.equals("verification-failed")) {
             return I18n.translate(
@@ -23,12 +20,7 @@ public record ChangeLogEntry(LogSeverity severity, StackChange change) implement
             );
         }
         if (outcome.startsWith("unsafe-blocked:")) {
-            return I18n.translate(
-                    locale,
-                    "ui.log.unsafe_blocked",
-                    change.itemId(),
-                    outcome.substring("unsafe-blocked:".length())
-            );
+            return I18n.translate(locale, "ui.log.unsafe_blocked", change.itemId());
         }
         if (outcome.equals("below-original-blocked")) {
             return I18n.translate(
@@ -49,7 +41,7 @@ public record ChangeLogEntry(LogSeverity severity, StackChange change) implement
             );
         }
         if (outcome.equals("external-conflict")) {
-            return I18n.translate(locale, "ui.log.external_conflict", change.itemId(), change.previous());
+            return I18n.translate(locale, "ui.log.external_conflict", change.itemId());
         }
         if (outcome.equals("changed")) {
             return I18n.translate(

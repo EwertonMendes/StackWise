@@ -1,76 +1,37 @@
 # StackWise
 
-StackWise is a server-side Hytale mod for safe, deterministic, and configurable item stack limits.
+StackWise is a server-side Hytale mod for safe, deterministic, and configurable item stack limits. It replaces broad one-value overrides with ordered rules, a global fallback, runtime safeguards, and an in-game administration interface.
 
-It provides two synchronized configuration paths:
+## Main features
 
-- `config.json` in the Hytale-provided StackWise data directory
-- An in-game administration interface opened with `/stackwise` or `/sw`
-
-Changes saved in the interface are written to the same JSON file. Manual JSON changes can be loaded with `/stackwise reload` or the `Reload JSON` button.
-
-## Features
-
-- Exact item id, prefix, suffix, glob, and regular expression matching
-- Deterministic priority and conflict resolution
-- Set and exclusion actions
-- Optional global limit for every otherwise-unmatched stackable item
-- Searchable and paginated rule management with Enter-key submission
-- Explicit irreversible deletion confirmation
+- Exact item id, prefix, suffix, glob, and regular-expression matching
+- Deterministic rule priority and specificity
+- `SET` and `EXCLUDE` actions
+- Editable global stack limit, enabled by default at `1000`
 - Safe mode for originally non-stackable items
-- Runtime decrease protection
-- Restoration of items that stop matching a rule
-- Conflict protection for values changed by another mod
-- Full loaded item registry processing
-- Item reference catalog export
-- Atomic configuration writes and invalid configuration backups
-- Native Hytale permissions and optional LuckPerms integration
-- Two-tab administrative Custom UI built with Hytale Common Styling
-- Color-coded operation log for load, reload, save, export, validation, and item application diagnostics
-- Scroll-preserving in-place interface updates for routine actions
-- Localized commands, messages, interface labels, and dropdown entries
+- Protection against live decreases and external mod conflicts
+- Restoration when StackWise is disabled or an item stops matching
+- Searchable, paginated, localized Custom UI
+- Actionable player-facing operation log and full technical server logging
+- Manual Overstacked migration through `/stackwise import overstacked`
+- Atomic configuration writes, backups, and validation
 - No per-tick processing
-- Item packet cache invalidation after stack limit changes
 
 ## Requirements
 
-- A current Hytale server installation
-- Java 25
+- Current Hytale server installation
+- Java 25 or newer
 - LuckPerms is optional
 
 ## Installation
 
-1. Install or update Hytale through the official launcher.
-2. Run `./gradlew clean build`.
-3. Copy `StackWise-1.0.0.jar` from `build/libs` into the server `mods` directory.
-4. Remove older StackWise JAR files from the same directory.
-5. Start the server.
-6. Edit the generated `config.json` or open `/stackwise` in game.
-7. Restart the server after reducing an active stack limit unless live decreases were explicitly enabled.
+1. Run `./gradlew clean build`.
+2. Copy `build/libs/StackWise-1.0.0.jar` to the server `mods` directory.
+3. Remove older StackWise JARs.
+4. Start the server.
+5. Edit `mods/Tblack_StackWise/config.json` or open `/stackwise` in game.
 
-## Building
-
-StackWise follows the same local Hytale dependency strategy as VoidVault. It automatically reads the server JAR and assets from the official installation directory on Windows, Linux, and macOS.
-
-No Hytale JAR or assets file needs to be copied into the project.
-
-Project updates may be extracted directly over the existing project directory. The build removes obsolete StackWise source files from earlier packages before compilation, so the IntelliJ project directory does not need to be recreated.
-
-```bash
-./gradlew clean build
-```
-
-The output is created at:
-
-```text
-build/libs/StackWise-1.0.0.jar
-```
-
-A local development server can be started with:
-
-```bash
-./gradlew runServer
-```
+StackWise is enabled by default on the first server start.
 
 ## Commands
 
@@ -78,210 +39,94 @@ A local development server can be started with:
 |---|---|
 | `/stackwise` | Open the administration interface |
 | `/stackwise ui` | Open the administration interface |
-| `/stackwise reload` | Reload `config.json` and apply safe live changes |
+| `/stackwise reload` | Reload and validate `config.json` |
 | `/stackwise validate` | Validate the active configuration |
-| `/stackwise export` | Export the complete loaded item reference catalog |
+| `/stackwise import overstacked` | Import `MaxStackSizes.json` manually |
 | `/stackwise status` | Show the latest application report |
 
-The default alias is `/sw`.
-
-## Permissions
-
-The default administration permission is:
-
-```text
-stackwise.admin
-```
-
-Native Hytale permission providers and LuckPerms are supported. Wildcard administrators can also access the interface.
-
-Example LuckPerms command:
-
-```text
-/lp group admin permission set stackwise.admin true
-```
-
-Permission is checked when the interface opens and before every write operation.
+The default alias is `/sw`. The default administration permission is `stackwise.admin`.
 
 ## Configuration
 
-The configuration is created in the data directory supplied by Hytale to StackWise.
+The generated schema starts at `configVersion: 1`. The public JSON contains only values that change StackWise behavior. Validation limits are internal constants:
+
+- Minimum configurable stack: `1`
+- Maximum configurable stack: `999999`
+- Default global stack limit: `1000`
+
+`globalStackLimit` remains editable. Values outside the supported range are rejected before the active configuration is replaced.
 
 A complete example is available in `config.example.json`.
 
-The first generated configuration contains active and functional examples for every action and match type:
-
-- `SET` with `EXACT`
-- `SET` with `PREFIX`
-- `SET` with `SUFFIX`
-- `SET` with `GLOB`
-- `SET` with `REGEX`
-- `EXCLUDE`
-
-Existing configurations are never replaced during an update. Back up and remove the existing `config.json` before startup only when a new first-run configuration is intentionally required.
-
 ### Global limit
 
-`globalLimitEnabled` is enabled by default. When enabled, every originally stackable item that does not match a rule receives `globalStackLimit`, which defaults to `1000`.
-
-Specific rules always win over the global limit. An `EXCLUDE` rule keeps matching items at their original limits. Originally non-stackable items are never changed by the global limit.
-
-When the global limit is disabled, otherwise-unmatched items keep or return to their original limits. A live reduction may still require a server restart unless `allowRuntimeDecreases` is enabled.
-
-`maximumStack` remains the validation ceiling for both rule limits and the global limit.
+When `globalLimitEnabled` is true, every otherwise-unmatched item that was originally stackable receives `globalStackLimit`. Specific rules take precedence. `EXCLUDE` restores or preserves the baseline limit for matching items. Originally non-stackable items are not changed by the global fallback.
 
 ### Rule precedence
 
-Rules are evaluated in this order:
+Rules are evaluated by:
 
 1. Higher priority
 2. More specific match type
 3. Earlier position in the configuration
 
-Specificity order:
+Specificity order: `EXACT`, `PREFIX`, `SUFFIX`, `GLOB`, `REGEX`.
 
-1. Exact
-2. Prefix
-3. Suffix
-4. Glob
-5. Regular expression
+### Safety and runtime behavior
 
-The first matching compiled rule wins.
+- `safeMode` blocks increases for items whose baseline limit is one unless the matching rule enables `allowUnsafe`.
+- `allowDecreases` controls values below the captured baseline.
+- `allowRuntimeDecreases` controls ordinary live reductions while StackWise remains enabled.
+- `restoreUnmatchedItems` restores items that stop matching a rule.
+- `respectExternalChanges` prevents StackWise from overwriting a value changed later by another mod or server component.
 
-### Match types
+When `enabled` becomes false, StackWise immediately attempts to restore only values it owns. This shutdown restoration is not blocked by `allowRuntimeDecreases`. Existing oversized inventory stacks, asset reload order, or values controlled by another mod can still require a server restart to fully normalize. The administration interface shows this warning below the enable checkbox.
 
-| Type | Example | Matches |
-|---|---|---|
-| `EXACT` | `Ingredient_Stick` | One exact item id |
-| `PREFIX` | `Weapon_Arrow` | Every id starting with the value |
-| `SUFFIX` | `_White` | Every id ending with the value |
-| `GLOB` | `Plant_Seeds_*` | Simple `*` and `?` wildcard patterns |
-| `REGEX` | `^Ingredient_Crystal_(Cyan\|Red)$` | Advanced regular expressions |
+## Overstacked migration
 
-### Actions
+Migration is never automatic. Keep the original `MaxStackSizes.json` available and run:
 
-| Action | Behavior |
-|---|---|
-| `SET` | Assign the configured maximum stack |
-| `EXCLUDE` | Prevent lower-priority rules from changing the item |
+```text
+/stackwise import overstacked
+```
 
-### Safety settings
+The importer:
 
-`safeMode` blocks increases for items whose original stack limit is one unless that rule enables `allowUnsafe`.
+- Reads `ItemIds` and `Patterns`
+- Validates integer limits from `1` through `999999`
+- Preserves Overstacked regular expressions as `REGEX` rules
+- Converts compatible item families into `PREFIX` rules only when at least two entries share the same two-segment prefix and the same limit
+- Keeps entries separate when values differ
+- Replaces the StackWise rule list, creates a timestamped configuration backup, and disables the global fallback to preserve the imported behavior
+- Uses deterministic rule ids and localized result messages
 
-Stackable items remain eligible even when their asset contains weapon, tool, armor, or other state-related definitions. This allows ammunition such as `Weapon_Arrow_*` to be changed while still protecting originally non-stackable equipment.
+Examples:
 
-`allowDecreases` controls whether a configured value may be lower than the original item limit.
+- `Ingredient_Crystal_Blue = 1000` and `Ingredient_Crystal_Green = 1000` become one `Ingredient_Crystal_` prefix rule.
+- If one crystal uses a different limit, those crystal entries remain exact rules.
+- `Ore_Onyxium` remains exact while variants such as `Ore_Onyxium_Basalt` may be grouped under `Ore_Onyxium_`.
 
-`allowRuntimeDecreases` controls whether an active value may be reduced without restarting. It is disabled by default because existing oversized stacks may become invalid.
-
-`restoreUnmatchedItems` restores the original value when a previously applied item no longer matches an active rule.
-
-`respectExternalChanges` stops StackWise from overwriting a value that another mod changed after StackWise applied it.
-
-The hard configurable limit is `9999`.
-
-## Administration interface
-
-The main administration page is separated into `Rules` and `Global settings` tabs. The tabs use Common Styling buttons rather than the currently problematic default `TabNavigation` styles.
-
-Routine actions update the mounted document in place. The rule, settings, editor, and log scrolling areas enable `KeepScrollPosition`, preventing ordinary searches, pagination, delete confirmation, saves, and tab changes from rebuilding the page and returning to the top.
-
-The rule editor uses a Common Styling dropdown style with `PanelAlign: Bottom`, so action and match-type entries open below their fields.
-
-### Rule search
-
-The administration interface can search case-insensitively by:
-
-- Rule id
-- Exact item id stored in `value`
-- Prefix, suffix, glob, or regular expression text stored in `value`
-
-The current search remains active when a rule is edited and the interface returns to the previous page. Search can be submitted with the button or the Enter key.
-
+The command structure intentionally uses `/stackwise import <source>` so additional migration sources can be added without changing the root command design.
 
 ## Operation log
 
-The `View log` button opens diagnostics for the most recent asset load, JSON reload, settings save, rule save, deletion, or catalog export. Entries are grouped visually by severity:
+The main administration page displays only the result of the action just performed. `View log` opens details for the latest operation without duplicating the summary.
 
-- Information
-- Success
-- Warning
-- Error
+Player-facing logs contain only actionable messages such as invalid configuration, safe-mode blocks, restart requirements, external conflicts, and migration problems. Java exception details and stack traces remain in the server log.
 
-The log includes validation paths, blocked unsafe items, restart-required reductions, conflicts with other mods, packet verification failures, exceptions, and a limited sample of successful changes. Errors and warnings are listed before successful item changes.
-
-## Item reference catalog
-
-Run `/stackwise export` or use `Export item reference` to create:
-
-```text
-<StackWise data directory>/item-catalog.json
-```
-
-The catalog is a rule-authoring and diagnostics reference. It is not imported automatically and does not change gameplay.
-
-Use it to:
-
-- Discover exact item ids for `EXACT` rules
-- Identify shared prefixes and suffixes
-- Verify how many items are available to StackWise
-- See original, current, and requested stack limits
-- See which rule controls an item
-- Diagnose exclusions, unmatched items, and Safe Mode blocks
-
-The export contains:
-
-- `schemaVersion`
-- `itemCount`
-- `items`
-- `itemId`
-- `originalStack`
-- `currentStack`
-- `targetStack`
-- `ruleId`
-- `action`
-- `matchType`
-- `matchValue`
-- `status`
-- `unsafeReason`
-
-After a normal server startup, `itemCount` should represent the complete loaded item registry rather than only the most recent asset update batch.
-
-## Localization
-
-StackWise includes the same localization architecture used by VoidVault.
-
-Included locales:
-
-- English (`en-US`)
-- German (`de-DE`)
-- Spanish (`es-ES`)
-- French (`fr-FR`)
-- Brazilian Portuguese (`pt-BR`)
-- Russian (`ru-RU`)
-- Ukrainian (`uk-UA`)
-- Simplified Chinese (`zh-CN`)
-
-Interface labels, rule actions, match types, command descriptions, validation messages, and command responses are translated. JSON enum values remain stable in English, such as `SET`, `EXCLUDE`, `PREFIX`, and `REGEX`, regardless of the player's language.
-
-## Compatibility behavior
-
-StackWise listens for Hytale item asset events and applies rules against the complete asset map. This ensures that rules created after startup can affect all loaded items instead of only the last event batch.
-
-The item compatibility layer reads the public stack accessor when available, writes a supported field or setter, invalidates the cached item packet, and verifies the result.
-
-When no compatible mutator is available, StackWise leaves assets unchanged and reports the adapter as unavailable in `/stackwise status`.
-
-## Tests
+## Building and testing
 
 ```bash
-./gradlew test
+./gradlew clean build
 ```
 
-The test suite covers rule precedence, global-limit precedence and restoration, validation, localization key parity, Common Styling references, Java-to-UI selector contracts, unique UI element ids, bottom-aligned dropdowns, safe tab controls, Enter-key search, scroll retention declarations, operation-log controls, deletion confirmations, arrow rule regression, full catalog diagnostics, Safe Mode, runtime reductions, external conflicts, restoration, repeated asset loading, packet cache invalidation, and the VoidVault-equivalent Gradle dependency contract.
+The local Hytale server JAR and assets are discovered from the official installation or can be overridden with Gradle properties.
 
-See `docs/VALIDATION.md` for the real-server release checklist.
+```bash
+./gradlew runServer
+```
+
+See `docs/VALIDATION.md` for the in-game verification checklist.
 
 ## License
 

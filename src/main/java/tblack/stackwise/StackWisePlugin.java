@@ -12,15 +12,16 @@ import tblack.stackwise.config.ConfigOperationResult;
 import tblack.stackwise.config.StackWiseConfig;
 import tblack.stackwise.config.ValidationResult;
 import tblack.stackwise.diagnostics.OperationLogService;
+import tblack.stackwise.migration.OverstackedRuleMigration;
+import tblack.stackwise.migration.RuleMigrationResult;
+import tblack.stackwise.migration.RuleMigrationService;
 import tblack.stackwise.permissions.PermissionService;
 import tblack.stackwise.stack.ReflectionItemStackLimitAdapter;
 import tblack.stackwise.stack.StackApplyReport;
 import tblack.stackwise.stack.StackApplyService;
 
 import javax.annotation.Nonnull;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
+import java.util.List;
 
 public final class StackWisePlugin extends JavaPlugin {
     public static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
@@ -28,6 +29,7 @@ public final class StackWisePlugin extends JavaPlugin {
     private static StackWisePlugin instance;
 
     private final ConfigManager configManager;
+    private final RuleMigrationService migrationService;
     private final PermissionService permissionService = new PermissionService();
     private final OperationLogService operationLogService = new OperationLogService();
     private StackWiseConfig config;
@@ -36,6 +38,10 @@ public final class StackWisePlugin extends JavaPlugin {
     public StackWisePlugin(@Nonnull JavaPluginInit init) {
         super(init);
         configManager = new ConfigManager(init.getDataDirectory());
+        migrationService = new RuleMigrationService(
+                init.getDataDirectory(),
+                List.of(new OverstackedRuleMigration())
+        );
     }
 
     @Override
@@ -48,7 +54,7 @@ public final class StackWisePlugin extends JavaPlugin {
         config = load.config();
         permissionService.register(config.commands.adminPermission);
         permissionService.register("stackwise.admin");
-        applyService = new StackApplyService(new ReflectionItemStackLimitAdapter(Item.class), config);
+        applyService = new StackApplyService(new ReflectionItemStackLimitAdapter(Item.class));
 
         getEventRegistry().register(LoadedAssetsEvent.class, Item.class, this::onItemAssetsLoaded);
         getCommandRegistry().registerCommand(new StackWiseCommand(this, config));
@@ -81,16 +87,16 @@ public final class StackWisePlugin extends JavaPlugin {
         ConfigOperationResult result = configManager.reload();
         OperationResult operation;
         if (!result.success()) {
+            LOGGER.atWarning().log("Configuration reload failed: %s", result.message());
             operation = OperationResult.failure(
                     "messages.operation_failed",
                     result.validation(),
-                    applyService.lastReport(),
+                    null,
                     result.message()
             );
         } else {
             config = result.config();
-            permissionService.clearCache();
-            permissionService.register(config.commands.adminPermission);
+            refreshPermissions();
             StackApplyReport report = applyService.applyRuntime(config);
             operation = OperationResult.success(
                     "messages.reload_success",
@@ -110,16 +116,16 @@ public final class StackWisePlugin extends JavaPlugin {
         ConfigOperationResult result = configManager.save(candidate);
         OperationResult operation;
         if (!result.success()) {
+            LOGGER.atWarning().log("Configuration save failed: %s", result.message());
             operation = OperationResult.failure(
                     "messages.operation_failed",
                     result.validation(),
-                    applyService.lastReport(),
+                    null,
                     result.message()
             );
         } else {
             config = result.config();
-            permissionService.clearCache();
-            permissionService.register(config.commands.adminPermission);
+            refreshPermissions();
             StackApplyReport report = applyService.applyRuntime(config);
             operation = OperationResult.success(
                     "messages.save_success",
@@ -135,36 +141,82 @@ public final class StackWisePlugin extends JavaPlugin {
         return operation;
     }
 
+    public RuleMigrationResult prepareRuleImport(String sourceId) {
+        return migrationService.migrate(sourceId, getConfig());
+    }
+
+    public synchronized OperationResult applyRuleImport(String sourceId, RuleMigrationResult migration) {
+        if (migration == null) return failRuleImport(sourceId, new IllegalStateException("Migration returned no result"));
+        if (!migration.success()) {
+            if (migration.cause() != null) {
+                LOGGER.atWarning().withCause(migration.cause()).log("Rule import failed for source %s", sourceId);
+            }
+            OperationResult operation = OperationResult.failure(
+                    migration.messageKey(),
+                    validateConfig(),
+                    null,
+                    migration.messageArgs()
+            );
+            operationLogService.record(operation);
+            return operation;
+        }
+
+        StackWiseConfig candidate = configManager.get();
+        candidate.rules = migration.config().rules;
+        candidate.globalLimitEnabled = migration.config().globalLimitEnabled;
+        ConfigOperationResult saved = configManager.saveWithBackup(
+                candidate,
+                "config.before-import-" + sourceId
+        );
+        if (!saved.success()) {
+            LOGGER.atWarning().log("Imported rules could not be saved: %s", saved.message());
+            OperationResult operation = OperationResult.failure(
+                    "messages.operation_failed",
+                    saved.validation(),
+                    null,
+                    saved.message()
+            );
+            operationLogService.record(operation);
+            return operation;
+        }
+
+        config = saved.config();
+        refreshPermissions();
+        StackApplyReport report = applyService.applyRuntime(config);
+        OperationResult operation = OperationResult.success(
+                migration.messageKey(),
+                saved.validation(),
+                report,
+                migration.messageArgs()
+        );
+        operationLogService.record(operation);
+        return operation;
+    }
+
+    public synchronized OperationResult failRuleImport(String sourceId, Throwable failure) {
+        LOGGER.atWarning().withCause(failure).log("Rule import failed for source %s", sourceId);
+        OperationResult operation = OperationResult.failure(
+                "messages.import_read_failed",
+                validateConfig(),
+                null,
+                "MaxStackSizes.json"
+        );
+        operationLogService.record(operation);
+        return operation;
+    }
+
+    public synchronized OperationResult importRules(String sourceId) {
+        return applyRuleImport(sourceId, prepareRuleImport(sourceId));
+    }
+
     public synchronized ValidationResult validateConfig() {
         return configManager.validateCurrent();
     }
 
-    public synchronized OperationResult exportCatalog() {
-        OperationResult operation;
-        try {
-            Files.createDirectories(configManager.directory());
-            Files.writeString(
-                    configManager.catalogFile(),
-                    configManager.gson().toJson(applyService.catalogExport()),
-                    StandardCharsets.UTF_8
-            );
-            operation = OperationResult.success(
-                    "messages.export_success",
-                    validateConfig(),
-                    applyService.lastReport(),
-                    applyService.assetCount(),
-                    configManager.catalogFile()
-            );
-        } catch (IOException exception) {
-            operation = OperationResult.failure(
-                    "messages.operation_failed",
-                    validateConfig(),
-                    applyService.lastReport(),
-                    exception.getMessage()
-            );
-        }
-        operationLogService.record(operation);
-        return operation;
+    private void refreshPermissions() {
+        permissionService.clearCache();
+        permissionService.register(config.commands.adminPermission);
+        permissionService.register("stackwise.admin");
     }
 
     private void onItemAssetsLoaded(@Nonnull LoadedAssetsEvent<String, Item, DefaultAssetMap<String, Item>> event) {

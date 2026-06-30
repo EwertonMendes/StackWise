@@ -60,4 +60,33 @@ class OperationLogServiceTest {
         assertEquals(1000, report.changes().size());
         assertTrue(report.changes().stream().anyMatch(change -> change.itemId().equals("Late_Failure")));
     }
+
+    @Test
+    void reportSummaryIsNotDuplicatedInsideTheDetailedLog() {
+        StackApplyReport report = new StackApplyReport();
+        report.adapterAvailable = true;
+        OperationLogService service = new OperationLogService();
+
+        service.recordReport("messages.assets_applied", report, 10, 5, 2, 0);
+
+        long summaries = service.entries().stream()
+                .filter(entry -> entry instanceof MessageLogEntry message && message.messageKey().equals("messages.report"))
+                .count();
+        assertEquals(0, summaries);
+        assertEquals(1, service.entries().size());
+    }
+
+    @Test
+    void playerFacingFailureDoesNotExposeTechnicalDetails() {
+        ChangeLogEntry entry = new ChangeLogEntry(
+                LogSeverity.ERROR,
+                new StackChange("Broken_Item", 0, 0, 0, 0, null, "failure", "IllegalStateException: secret")
+        );
+
+        String translated = entry.translated("en-US");
+
+        assertTrue(translated.contains("Broken_Item"));
+        assertTrue(!translated.contains("IllegalStateException"));
+        assertTrue(!translated.contains("secret"));
+    }
 }

@@ -21,7 +21,6 @@ import java.util.Locale;
 public final class ConfigManager {
     private final Path modDirectory;
     private final Path configFile;
-    private final Path catalogFile;
     private final Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
     private final ConfigValidator validator = new ConfigValidator();
     private StackWiseConfig current;
@@ -29,7 +28,6 @@ public final class ConfigManager {
     public ConfigManager(Path dataDirectory) {
         modDirectory = dataDirectory.toAbsolutePath().normalize();
         configFile = modDirectory.resolve("config.json");
-        catalogFile = modDirectory.resolve("item-catalog.json");
     }
 
     public synchronized ConfigOperationResult loadInitial() {
@@ -56,18 +54,12 @@ public final class ConfigManager {
     }
 
     public synchronized ConfigOperationResult save(StackWiseConfig candidate) {
-        StackWiseConfig normalized = normalize(copy(candidate));
-        ValidationResult validation = validator.validate(normalized);
-        if (!validation.isValid()) {
-            return ConfigOperationResult.failure(copy(current), validation, validation.firstError());
-        }
-        try {
-            write(normalized);
-            current = normalized;
-            return ConfigOperationResult.success(copy(normalized), validation, "Configuration saved");
-        } catch (IOException exception) {
-            return ConfigOperationResult.failure(copy(current), validation, message(exception));
-        }
+        return save(candidate, null);
+    }
+
+    public synchronized ConfigOperationResult saveWithBackup(StackWiseConfig candidate, String backupName) {
+        if (backupName == null || backupName.isBlank()) return save(candidate);
+        return save(candidate, backupName.trim());
     }
 
     public synchronized StackWiseConfig get() {
@@ -87,12 +79,20 @@ public final class ConfigManager {
         return configFile;
     }
 
-    public Path catalogFile() {
-        return catalogFile;
-    }
-
-    public Gson gson() {
-        return gson;
+    private ConfigOperationResult save(StackWiseConfig candidate, String backupName) {
+        StackWiseConfig normalized = normalize(copy(candidate));
+        ValidationResult validation = validator.validate(normalized);
+        if (!validation.isValid()) {
+            return ConfigOperationResult.failure(copy(current), validation, validation.firstError());
+        }
+        try {
+            if (backupName != null) backupCurrent(backupName);
+            write(normalized);
+            current = normalized;
+            return ConfigOperationResult.success(copy(normalized), validation, "Configuration saved");
+        } catch (IOException exception) {
+            return ConfigOperationResult.failure(copy(current), validation, message(exception));
+        }
     }
 
     private ConfigOperationResult readAndAccept() {
@@ -120,14 +120,7 @@ public final class ConfigManager {
     }
 
     private StackWiseConfig normalize(StackWiseConfig config) {
-        int sourceVersion = config.configVersion;
-        if (sourceVersion < 2) {
-            config.globalLimitEnabled = true;
-            int configuredMaximum = config.maximumStack > 0 ? config.maximumStack : 9999;
-            config.globalStackLimit = Math.min(1000, configuredMaximum);
-        }
-        config.configVersion = 2;
-        if (config.globalStackLimit < 1) config.globalStackLimit = Math.min(1000, Math.max(1, config.maximumStack));
+        if (config.configVersion <= 0) config.configVersion = StackWiseConfig.CURRENT_CONFIG_VERSION;
         if (config.commands == null) config.commands = new StackWiseConfig.Commands();
         if (config.commands.primary == null || config.commands.primary.isBlank()) config.commands.primary = "stackwise";
         config.commands.primary = config.commands.primary.trim().toLowerCase(Locale.ROOT);
@@ -171,6 +164,14 @@ public final class ConfigManager {
         } catch (AtomicMoveNotSupportedException exception) {
             Files.move(temporary, configFile, StandardCopyOption.REPLACE_EXISTING);
         }
+    }
+
+    private void backupCurrent(String backupName) throws IOException {
+        if (!Files.isRegularFile(configFile)) return;
+        Files.createDirectories(modDirectory);
+        String timestamp = Long.toString(Instant.now().toEpochMilli());
+        Path backup = modDirectory.resolve(backupName + "." + timestamp + ".json");
+        Files.copy(configFile, backup);
     }
 
     private void backupInvalid(String content) {

@@ -61,17 +61,8 @@ public final class OperationLogService {
 
     private void appendReport(StackApplyReport report) {
         if (report == null) return;
-        add(new MessageLogEntry(
-                report.failures > 0
-                        ? LogSeverity.ERROR
-                        : report.blockedCount() > 0
-                        ? LogSeverity.WARNING
-                        : LogSeverity.INFO,
-                "messages.report",
-                new Object[]{report.scanned, report.matched, report.changed, report.blockedCount(), report.failures}
-        ));
         if (!report.adapterAvailable) {
-            add(new MessageLogEntry(LogSeverity.ERROR, "ui.log.adapter_unavailable", new Object[]{report.adapterDescription}));
+            add(new MessageLogEntry(LogSeverity.ERROR, "ui.log.adapter_unavailable", new Object[0]));
         }
 
         List<StackChange> important = report.changes().stream()

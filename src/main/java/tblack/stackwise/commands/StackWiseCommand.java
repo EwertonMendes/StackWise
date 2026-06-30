@@ -3,6 +3,7 @@ package tblack.stackwise.commands;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
+import com.hypixel.hytale.server.core.command.system.basecommands.AbstractCommandCollection;
 import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
 import com.hypixel.hytale.server.core.entity.entities.Player;
@@ -14,12 +15,14 @@ import tblack.stackwise.StackWisePlugin;
 import tblack.stackwise.config.StackWiseConfig;
 import tblack.stackwise.config.ValidationResult;
 import tblack.stackwise.i18n.I18n;
+import tblack.stackwise.migration.RuleMigrationResult;
 import tblack.stackwise.stack.StackApplyReport;
 import tblack.stackwise.ui.StackWiseAdminPage;
 import tblack.stackwise.util.Chat;
 
 import javax.annotation.Nonnull;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public final class StackWiseCommand extends AbstractPlayerCommand {
     private final StackWisePlugin plugin;
@@ -33,7 +36,7 @@ public final class StackWiseCommand extends AbstractPlayerCommand {
         addSubCommand(new UiCommand(plugin));
         addSubCommand(new ReloadCommand(plugin));
         addSubCommand(new ValidateCommand(plugin));
-        addSubCommand(new ExportCommand(plugin));
+        addSubCommand(new ImportCommand(plugin));
         addSubCommand(new StatusCommand(plugin));
     }
 
@@ -90,6 +93,12 @@ public final class StackWiseCommand extends AbstractPlayerCommand {
         }
     }
 
+    private static void sendOperation(CommandContext context, OperationResult result) {
+        Chat.send(context, result.success()
+                ? Chat.rawSuccess(result.translated(I18n.locale(context)))
+                : Chat.rawError(result.translated(I18n.locale(context))));
+    }
+
     private static final class UiCommand extends AbstractPlayerCommand {
         private final StackWisePlugin plugin;
 
@@ -134,10 +143,7 @@ public final class StackWiseCommand extends AbstractPlayerCommand {
                 Chat.send(context, Chat.error(context, "messages.no_permission"));
                 return;
             }
-            OperationResult result = plugin.reloadFromDisk();
-            Chat.send(context, result.success()
-                    ? Chat.rawSuccess(result.translated(I18n.locale(context)))
-                    : Chat.rawError(result.translated(I18n.locale(context))));
+            sendOperation(context, plugin.reloadFromDisk());
         }
     }
 
@@ -169,11 +175,23 @@ public final class StackWiseCommand extends AbstractPlayerCommand {
         }
     }
 
-    private static final class ExportCommand extends CommandBase {
+    private static final class ImportCommand extends AbstractCommandCollection {
+        private ImportCommand(StackWisePlugin plugin) {
+            super("import", I18n.commandKey("commands.import.description"));
+            addSubCommand(new ImportOverstackedCommand(plugin));
+        }
+
+        @Override
+        protected boolean canGeneratePermission() {
+            return false;
+        }
+    }
+
+    private static final class ImportOverstackedCommand extends AbstractPlayerCommand {
         private final StackWisePlugin plugin;
 
-        private ExportCommand(StackWisePlugin plugin) {
-            super("export", I18n.commandKey("commands.export.description"));
+        private ImportOverstackedCommand(StackWisePlugin plugin) {
+            super("overstacked", I18n.commandKey("commands.import.overstacked.description"));
             this.plugin = plugin;
         }
 
@@ -183,15 +201,28 @@ public final class StackWiseCommand extends AbstractPlayerCommand {
         }
 
         @Override
-        protected void executeSync(@Nonnull CommandContext context) {
+        protected void execute(
+                @Nonnull CommandContext context,
+                @Nonnull Store<EntityStore> store,
+                @Nonnull Ref<EntityStore> ref,
+                @Nonnull PlayerRef playerRef,
+                @Nonnull World world
+        ) {
             if (!canManage(plugin, context)) {
                 Chat.send(context, Chat.error(context, "messages.no_permission"));
                 return;
             }
-            OperationResult result = plugin.exportCatalog();
-            Chat.send(context, result.success()
-                    ? Chat.rawSuccess(result.translated(I18n.locale(context)))
-                    : Chat.rawError(result.translated(I18n.locale(context))));
+            CompletableFuture
+                    .supplyAsync(() -> plugin.prepareRuleImport("overstacked"))
+                    .whenComplete((migration, failure) -> world.execute(() -> completeImport(context, migration, failure)));
+        }
+
+        private void completeImport(CommandContext context, RuleMigrationResult migration, Throwable failure) {
+            if (failure != null) {
+                sendOperation(context, plugin.failRuleImport("overstacked", failure));
+                return;
+            }
+            sendOperation(context, plugin.applyRuleImport("overstacked", migration));
         }
     }
 

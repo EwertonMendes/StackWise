@@ -254,7 +254,7 @@ public final class StackWiseRulePage extends InteractiveCustomUIPage<StackWiseRu
     private StackRule newRule(StackWiseConfig config) {
         StackRule rule = new StackRule();
         rule.id = nextId(config);
-        rule.maxStack = Math.min(100, config.maximumStack);
+        rule.maxStack = Math.min(100, StackWiseConfig.MAX_STACK_LIMIT);
         return rule;
     }
 

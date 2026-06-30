@@ -7,6 +7,7 @@ import tblack.stackwise.rule.StackRule;
 
 import java.util.ArrayList;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -14,11 +15,14 @@ class ConfigValidatorTest {
     private final ConfigValidator validator = new ConfigValidator();
 
     @Test
-    void defaultConfigurationIsValid() {
+    void defaultConfigurationIsEnabledAndValid() {
         StackWiseConfig config = new StackWiseConfig();
 
+        assertEquals(1, config.configVersion);
+        assertTrue(config.enabled);
         assertTrue(config.globalLimitEnabled);
-        assertTrue(config.globalStackLimit == 1000);
+        assertEquals(1000, config.globalStackLimit);
+        assertEquals(999999, StackWiseConfig.MAX_STACK_LIMIT);
         assertTrue(validator.validate(config).isValid());
     }
 
@@ -32,12 +36,36 @@ class ConfigValidatorTest {
         for (RuleAction action : RuleAction.values()) {
             assertTrue(config.rules.stream().anyMatch(rule -> rule.action == action), action.name());
         }
-        assertTrue(config.rules.stream().anyMatch(rule ->
-                rule.action == RuleAction.SET
-                        && rule.matchType == MatchType.PREFIX
-                        && rule.value.equals("Weapon_Arrow")
-                        && rule.maxStack == 1000
-        ));
+    }
+
+    @Test
+    void maximumSupportedLimitIsAccepted() {
+        StackWiseConfig config = new StackWiseConfig();
+        config.globalStackLimit = StackWiseConfig.MAX_STACK_LIMIT;
+        config.rules.getFirst().maxStack = StackWiseConfig.MAX_STACK_LIMIT;
+
+        assertTrue(validator.validate(config).isValid());
+    }
+
+    @Test
+    void valuesAboveHardLimitAreRejected() {
+        StackWiseConfig config = new StackWiseConfig();
+        config.globalStackLimit = StackWiseConfig.MAX_STACK_LIMIT + 1;
+        config.rules.getFirst().maxStack = StackWiseConfig.MAX_STACK_LIMIT + 1;
+
+        ValidationResult result = validator.validate(config);
+
+        assertFalse(result.isValid());
+        assertTrue(result.errors().stream().anyMatch(issue -> issue.path().equals("globalStackLimit")));
+        assertTrue(result.errors().stream().anyMatch(issue -> issue.path().endsWith(".maxStack")));
+    }
+
+    @Test
+    void valuesBelowMinimumAreRejected() {
+        StackWiseConfig config = new StackWiseConfig();
+        config.globalStackLimit = 0;
+
+        assertFalse(validator.validate(config).isValid());
     }
 
     @Test
@@ -63,28 +91,6 @@ class ConfigValidatorTest {
 
         assertFalse(result.isValid());
         assertTrue(result.errors().stream().anyMatch(issue -> issue.message().contains("regular expression")));
-    }
-
-    @Test
-    void valuesAboveHardLimitAreRejected() {
-        StackWiseConfig config = new StackWiseConfig();
-        config.maximumStack = 10000;
-
-        ValidationResult result = validator.validate(config);
-
-        assertFalse(result.isValid());
-    }
-
-
-    @Test
-    void globalLimitMustStayWithinTheConfiguredRange() {
-        StackWiseConfig config = new StackWiseConfig();
-        config.globalStackLimit = 10000;
-
-        ValidationResult result = validator.validate(config);
-
-        assertFalse(result.isValid());
-        assertTrue(result.errors().stream().anyMatch(issue -> issue.path().equals("globalStackLimit")));
     }
 
     @Test

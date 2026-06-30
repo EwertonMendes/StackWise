@@ -1,5 +1,5 @@
 {
-  "configVersion": 2,
+  "configVersion": 1,
   "enabled": true,
   "globalLimitEnabled": true,
   "globalStackLimit": 1000,
@@ -8,8 +8,6 @@
   "allowRuntimeDecreases": false,
   "restoreUnmatchedItems": true,
   "respectExternalChanges": true,
-  "minimumStack": 1,
-  "maximumStack": 9999,
   "commands": {
     "primary": "stackwise",
     "aliases": [

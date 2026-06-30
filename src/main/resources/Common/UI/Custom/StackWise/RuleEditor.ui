@@ -57,7 +57,7 @@ $Common.@PageOverlay {
           Label #MaxStackLabel { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 22, Bottom: 5); Text: "Maximum stack"; }
           $Common.@NumberField #MaxStackInput {
             Anchor: (Width: 350, Height: 38);
-            Format: (MaxDecimalPlaces: 0, Step: 1, MinValue: 1, MaxValue: 9999);
+            Format: (MaxDecimalPlaces: 0, Step: 1, MinValue: 1, MaxValue: 999999);
           }
         }
 

@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 class StackApplyServiceTest {
     @Test
@@ -19,7 +18,7 @@ class StackApplyServiceTest {
         TestItem item = new TestItem();
         FakeAdapter adapter = new FakeAdapter(item, 64);
         StackWiseConfig config = config(rule("test", MatchType.EXACT, "Test_Item", 100, false));
-        StackApplyService service = new StackApplyService(adapter, config);
+        StackApplyService service = new StackApplyService(adapter);
 
         StackApplyReport report = service.onAssetsLoaded(Map.of("Test_Item", item), config);
 
@@ -33,7 +32,7 @@ class StackApplyServiceTest {
         StatefulTestItem arrow = new StatefulTestItem();
         FakeAdapter adapter = new FakeAdapter(arrow, 100);
         StackWiseConfig config = new StackWiseConfig();
-        StackApplyService service = new StackApplyService(adapter, config);
+        StackApplyService service = new StackApplyService(adapter);
 
         StackApplyReport report = service.onAssetsLoaded(Map.of("Weapon_Arrow_Iron", arrow), config);
 
@@ -44,25 +43,19 @@ class StackApplyServiceTest {
         assertEquals(1, service.matchCount("arrows"));
     }
 
-
     @Test
     void globalLimitAppliesToUnmatchedStackableItems() {
         TestItem item = new TestItem();
         FakeAdapter adapter = new FakeAdapter(item, 64);
         StackWiseConfig config = new StackWiseConfig();
         config.rules = List.of();
-        StackApplyService service = new StackApplyService(adapter, config);
+        StackApplyService service = new StackApplyService(adapter);
 
         StackApplyReport report = service.onAssetsLoaded(Map.of("Unmatched_Item", item), config);
 
         assertEquals(1000, adapter.value(item));
         assertEquals(1, report.matched);
         assertEquals(1, report.changed);
-        ItemCatalogEntry entry = service.catalog().get(0);
-        assertEquals("GLOBAL", entry.status());
-        assertEquals("GLOBAL", entry.action());
-        assertEquals(1000, entry.targetStack());
-        assertNull(entry.ruleId());
     }
 
     @Test
@@ -71,12 +64,11 @@ class StackApplyServiceTest {
         FakeAdapter adapter = new FakeAdapter(item, 64);
         StackWiseConfig config = new StackWiseConfig();
         config.rules = List.of(rule("specific", MatchType.EXACT, "Test_Item", 250, false));
-        StackApplyService service = new StackApplyService(adapter, config);
+        StackApplyService service = new StackApplyService(adapter);
 
         service.onAssetsLoaded(Map.of("Test_Item", item), config);
 
         assertEquals(250, adapter.value(item));
-        assertEquals("specific", service.catalog().get(0).ruleId());
     }
 
     @Test
@@ -87,13 +79,12 @@ class StackApplyServiceTest {
         StackRule exclude = rule("exclude", MatchType.EXACT, "Test_Item", 1, false);
         exclude.action = RuleAction.EXCLUDE;
         config.rules = List.of(exclude);
-        StackApplyService service = new StackApplyService(adapter, config);
+        StackApplyService service = new StackApplyService(adapter);
 
         StackApplyReport report = service.onAssetsLoaded(Map.of("Test_Item", item), config);
 
         assertEquals(64, adapter.value(item));
         assertEquals(1, report.excluded);
-        assertEquals("EXCLUDED", service.catalog().get(0).status());
     }
 
     @Test
@@ -102,7 +93,7 @@ class StackApplyServiceTest {
         FakeAdapter adapter = new FakeAdapter(item, 1);
         StackWiseConfig config = new StackWiseConfig();
         config.rules = List.of();
-        StackApplyService service = new StackApplyService(adapter, config);
+        StackApplyService service = new StackApplyService(adapter);
 
         StackApplyReport report = service.onAssetsLoaded(Map.of("NonStackable_Item", item), config);
 
@@ -112,19 +103,52 @@ class StackApplyServiceTest {
     }
 
     @Test
-    void disablingTheGlobalLimitRestoresUnmatchedItemsWhenAllowed() {
+    void disabledFirstLoadDoesNotChangeItems() {
+        TestItem item = new TestItem();
+        FakeAdapter adapter = new FakeAdapter(item, 64);
+        StackWiseConfig config = new StackWiseConfig();
+        config.enabled = false;
+        StackApplyService service = new StackApplyService(adapter);
+
+        StackApplyReport report = service.onAssetsLoaded(Map.of("Weapon_Arrow_Iron", item), config);
+
+        assertEquals(64, adapter.value(item));
+        assertEquals(0, report.changed);
+        assertEquals(0, report.matched);
+    }
+
+    @Test
+    void disablingStackWiseRestoresOwnedValuesWithoutRuntimeDecreasePermission() {
+        TestItem item = new TestItem();
+        FakeAdapter adapter = new FakeAdapter(item, 64);
+        StackWiseConfig enabled = config(rule("test", MatchType.EXACT, "Test_Item", 1000, false));
+        StackApplyService service = new StackApplyService(adapter);
+        service.onAssetsLoaded(Map.of("Test_Item", item), enabled);
+
+        StackWiseConfig disabled = config();
+        disabled.enabled = false;
+        disabled.allowRuntimeDecreases = false;
+        disabled.restoreUnmatchedItems = false;
+        StackApplyReport report = service.applyRuntime(disabled);
+
+        assertEquals(64, adapter.value(item));
+        assertEquals(1, report.changed);
+        assertEquals(0, report.restartRequired);
+    }
+
+    @Test
+    void disablingGlobalLimitRestoresUnmatchedItems() {
         TestItem item = new TestItem();
         FakeAdapter adapter = new FakeAdapter(item, 64);
         StackWiseConfig initial = new StackWiseConfig();
         initial.rules = List.of();
-        StackApplyService service = new StackApplyService(adapter, initial);
+        StackApplyService service = new StackApplyService(adapter);
         service.onAssetsLoaded(Map.of("Test_Item", item), initial);
 
         StackWiseConfig disabled = new StackWiseConfig();
         disabled.rules = List.of();
         disabled.globalLimitEnabled = false;
         disabled.restoreUnmatchedItems = false;
-        disabled.allowRuntimeDecreases = true;
         service.applyRuntime(disabled);
 
         assertEquals(64, adapter.value(item));
@@ -135,7 +159,7 @@ class StackApplyServiceTest {
         TestItem item = new TestItem();
         FakeAdapter adapter = new FakeAdapter(item, 1);
         StackWiseConfig config = config(rule("test", MatchType.EXACT, "Test_Item", 100, false));
-        StackApplyService service = new StackApplyService(adapter, config);
+        StackApplyService service = new StackApplyService(adapter);
 
         StackApplyReport report = service.onAssetsLoaded(Map.of("Test_Item", item), config);
 
@@ -148,7 +172,7 @@ class StackApplyServiceTest {
         TestItem item = new TestItem();
         FakeAdapter adapter = new FakeAdapter(item, 1);
         StackWiseConfig config = config(rule("test", MatchType.EXACT, "Test_Item", 100, true));
-        StackApplyService service = new StackApplyService(adapter, config);
+        StackApplyService service = new StackApplyService(adapter);
 
         StackApplyReport report = service.onAssetsLoaded(Map.of("Test_Item", item), config);
 
@@ -161,7 +185,7 @@ class StackApplyServiceTest {
         TestItem item = new TestItem();
         FakeAdapter adapter = new FakeAdapter(item, 64);
         StackWiseConfig initial = config(rule("test", MatchType.EXACT, "Test_Item", 100, false));
-        StackApplyService service = new StackApplyService(adapter, initial);
+        StackApplyService service = new StackApplyService(adapter);
         service.onAssetsLoaded(Map.of("Test_Item", item), initial);
 
         StackWiseConfig reduced = config(rule("test", MatchType.EXACT, "Test_Item", 50, false));
@@ -177,7 +201,7 @@ class StackApplyServiceTest {
         TestItem item = new TestItem();
         FakeAdapter adapter = new FakeAdapter(item, 64);
         StackWiseConfig initial = config(rule("test", MatchType.EXACT, "Test_Item", 100, false));
-        StackApplyService service = new StackApplyService(adapter, initial);
+        StackApplyService service = new StackApplyService(adapter);
         service.onAssetsLoaded(Map.of("Test_Item", item), initial);
         adapter.set(item, 80);
 
@@ -189,11 +213,28 @@ class StackApplyServiceTest {
     }
 
     @Test
+    void disablingDoesNotOverwriteAnExternalOwner() {
+        TestItem item = new TestItem();
+        FakeAdapter adapter = new FakeAdapter(item, 64);
+        StackWiseConfig initial = config(rule("test", MatchType.EXACT, "Test_Item", 100, false));
+        StackApplyService service = new StackApplyService(adapter);
+        service.onAssetsLoaded(Map.of("Test_Item", item), initial);
+        adapter.set(item, 80);
+
+        StackWiseConfig disabled = config();
+        disabled.enabled = false;
+        StackApplyReport report = service.applyRuntime(disabled);
+
+        assertEquals(80, adapter.value(item));
+        assertEquals(1, report.externalConflict);
+    }
+
+    @Test
     void unmatchedItemsCanBeRestored() {
         TestItem item = new TestItem();
         FakeAdapter adapter = new FakeAdapter(item, 64);
         StackWiseConfig initial = config(rule("test", MatchType.EXACT, "Test_Item", 100, false));
-        StackApplyService service = new StackApplyService(adapter, initial);
+        StackApplyService service = new StackApplyService(adapter);
         service.onAssetsLoaded(Map.of("Test_Item", item), initial);
 
         StackWiseConfig empty = config();
@@ -209,7 +250,7 @@ class StackApplyServiceTest {
         TestItem item = new TestItem();
         FakeAdapter adapter = new FakeAdapter(item, 1);
         StackWiseConfig initial = config(rule("test", MatchType.EXACT, "Test_Item", 100, true));
-        StackApplyService service = new StackApplyService(adapter, initial);
+        StackApplyService service = new StackApplyService(adapter);
         service.onAssetsLoaded(Map.of("Test_Item", item), initial);
 
         StackWiseConfig updated = config(rule("test", MatchType.EXACT, "Test_Item", 150, false));
@@ -217,33 +258,6 @@ class StackApplyServiceTest {
 
         assertEquals(100, adapter.value(item));
         assertEquals(1, report.unsafeBlocked);
-    }
-
-    @Test
-    void catalogContainsEveryRegisteredItemAndRuleDiagnostics() {
-        TestItem arrow = new TestItem();
-        TestItem stick = new TestItem();
-        FakeAdapter adapter = new FakeAdapter(Map.of(arrow, 100, stick, 100));
-        StackWiseConfig config = new StackWiseConfig();
-        StackApplyService service = new StackApplyService(adapter, config);
-
-        service.onAssetsLoaded(Map.of("Weapon_Arrow_Crude", arrow, "Ingredient_Stick", stick), config);
-        ItemCatalogExport export = service.catalogExport();
-
-        assertEquals(1, export.schemaVersion());
-        assertEquals(2, export.itemCount());
-        assertEquals(2, export.items().size());
-        ItemCatalogEntry arrowEntry = export.items().stream()
-                .filter(entry -> entry.itemId().equals("Weapon_Arrow_Crude"))
-                .findFirst()
-                .orElseThrow();
-        assertEquals(100, arrowEntry.originalStack());
-        assertEquals(1000, arrowEntry.currentStack());
-        assertEquals(1000, arrowEntry.targetStack());
-        assertEquals("arrows", arrowEntry.ruleId());
-        assertEquals("PREFIX", arrowEntry.matchType());
-        assertEquals("Weapon_Arrow", arrowEntry.matchValue());
-        assertNull(arrowEntry.unsafeReason());
     }
 
     private StackWiseConfig config(StackRule... rules) {
@@ -278,10 +292,6 @@ class StackApplyServiceTest {
 
         private FakeAdapter(Object item, int value) {
             values.put(item, value);
-        }
-
-        private FakeAdapter(Map<Object, Integer> initialValues) {
-            values.putAll(initialValues);
         }
 
         @Override

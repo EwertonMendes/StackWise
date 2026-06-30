@@ -8,7 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StackWiseConfig {
-    public int configVersion = 2;
+    public static final int CURRENT_CONFIG_VERSION = 1;
+    public static final int MIN_STACK_LIMIT = 1;
+    public static final int MAX_STACK_LIMIT = 999_999;
+
+    public int configVersion = CURRENT_CONFIG_VERSION;
     public boolean enabled = true;
     public boolean globalLimitEnabled = true;
     public int globalStackLimit = 1000;
@@ -17,8 +21,6 @@ public class StackWiseConfig {
     public boolean allowRuntimeDecreases = false;
     public boolean restoreUnmatchedItems = true;
     public boolean respectExternalChanges = true;
-    public int minimumStack = 1;
-    public int maximumStack = 9999;
     public Commands commands = new Commands();
     public List<StackRule> rules = defaultRules();
 

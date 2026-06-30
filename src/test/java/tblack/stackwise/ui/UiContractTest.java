@@ -40,6 +40,7 @@ class UiContractTest {
                 "GlobalSettingsLabel",
                 "EnabledCheck",
                 "EnabledLabel",
+                "EnabledHintLabel",
                 "SafeModeCheck",
                 "SafeModeLabel",
                 "RespectExternalChangesCheck",
@@ -53,13 +54,11 @@ class UiContractTest {
                 "GlobalLimitEnabledCheck",
                 "GlobalLimitEnabledLabel",
                 "GlobalStackLimitInput",
-                "MaximumStackInput",
                 "SearchField",
                 "SearchButton",
                 "ClearSearchButton",
                 "NewRuleButton",
                 "ReloadButton",
-                "ExportButton",
                 "SaveGeneralButton",
                 "PageLabel",
                 "PreviousButton",
@@ -76,6 +75,32 @@ class UiContractTest {
             assertTrue(document.contains("#DeleteConfirmation" + index));
             assertTrue(document.contains("#ConfirmDeleteButton" + index));
         }
+    }
+
+
+    @Test
+    void stackLimitInputsUseTheSupportedHardMaximum() throws IOException {
+        String admin = Files.readString(DIRECTORY.resolve("Admin.ui"));
+        String editor = Files.readString(DIRECTORY.resolve("RuleEditor.ui"));
+
+        assertTrue(admin.contains("#GlobalStackLimitInput"));
+        assertTrue(admin.contains("MaxValue: 999999"));
+        assertTrue(editor.contains("#MaxStackInput"));
+        assertTrue(editor.contains("MaxValue: 999999"));
+        assertFalse(admin.contains("#MaximumStackInput"));
+    }
+
+    @Test
+    void exportControlsAndPersistentReportBarAreRemoved() throws IOException {
+        String document = Files.readString(DIRECTORY.resolve("Admin.ui"));
+        String source = Files.readString(Path.of(
+                "src", "main", "java", "tblack", "stackwise", "ui", "StackWiseAdminPage.java"
+        ));
+
+        assertFalse(document.contains("#ExportButton"));
+        assertFalse(document.contains("#ReportBar"));
+        assertFalse(source.contains("exportCatalog"));
+        assertFalse(source.contains("renderReport"));
     }
 
     @Test

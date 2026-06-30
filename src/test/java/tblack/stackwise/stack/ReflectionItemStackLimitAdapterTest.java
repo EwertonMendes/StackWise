@@ -3,6 +3,7 @@ package tblack.stackwise.stack;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ReflectionItemStackLimitAdapterTest {
@@ -15,8 +16,23 @@ class ReflectionItemStackLimitAdapterTest {
         adapter.write(item, 250);
 
         assertEquals(250, adapter.read(item));
-        assertEquals(null, item.cachedPacket);
+        assertNull(item.cachedPacket);
         assertTrue(adapter.isAvailable());
+    }
+
+    @Test
+    void oneResolutionSupportsDifferentConcreteSubclasses() throws ReflectiveOperationException {
+        ReflectionItemStackLimitAdapter adapter = new ReflectionItemStackLimitAdapter(TestItem.class);
+        FirstItem first = new FirstItem();
+        SecondItem second = new SecondItem();
+
+        adapter.write(first, 100);
+        adapter.write(second, 200);
+
+        assertEquals(100, adapter.read(first));
+        assertEquals(200, adapter.read(second));
+        assertNull(((TestItem) first).cachedPacket);
+        assertNull(((TestItem) second).cachedPacket);
     }
 
     @Test
@@ -27,7 +43,7 @@ class ReflectionItemStackLimitAdapterTest {
         assertTrue(adapter.description().contains("invalidatePacketCache"));
     }
 
-    private static final class TestItem {
+    private static class TestItem {
         private int maxStack = 1;
         private Object cachedPacket = new Object();
 
@@ -38,5 +54,11 @@ class ReflectionItemStackLimitAdapterTest {
         private void invalidatePacketCache() {
             cachedPacket = null;
         }
+    }
+
+    private static final class FirstItem extends TestItem {
+    }
+
+    private static final class SecondItem extends TestItem {
     }
 }

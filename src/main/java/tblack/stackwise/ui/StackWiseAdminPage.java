@@ -114,7 +114,6 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
             case "new" -> openRuleEditor(ref, store, -1);
             case "save-general" -> saveGeneral(data);
             case "reload" -> finish(plugin.reloadFromDisk());
-            case "export" -> finish(plugin.exportCatalog());
             case "view-log" -> openLog(ref, store);
             case "search" -> applySearch(data.searchQuery);
             case "clear-search" -> applySearch("");
@@ -168,7 +167,6 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
         config.allowRuntimeDecreases = data.allowRuntimeDecreases;
         config.restoreUnmatchedItems = data.restoreUnmatched;
         config.respectExternalChanges = data.respectExternalChanges;
-        config.maximumStack = data.maximumStack;
         finish(plugin.saveAndApply(config));
     }
 
@@ -294,7 +292,6 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
         events.addEventBinding(CustomUIEventBindingType.Activating, "#NextButton", event("next"), false);
         events.addEventBinding(CustomUIEventBindingType.Activating, "#NewRuleButton", event("new"), false);
         events.addEventBinding(CustomUIEventBindingType.Activating, "#ReloadButton", event("reload"), false);
-        events.addEventBinding(CustomUIEventBindingType.Activating, "#ExportButton", event("export"), false);
         events.addEventBinding(CustomUIEventBindingType.Activating, "#ViewLogButton", event("view-log"), false);
         events.addEventBinding(CustomUIEventBindingType.Activating, "#ClearSearchButton", event("clear-search"), false);
         events.addEventBinding(
@@ -320,8 +317,7 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
                         .append("@AllowDecreases", "#AllowDecreasesCheck.Value")
                         .append("@AllowRuntimeDecreases", "#AllowRuntimeDecreasesCheck.Value")
                         .append("@RestoreUnmatched", "#RestoreUnmatchedCheck.Value")
-                        .append("@RespectExternalChanges", "#RespectExternalChangesCheck.Value")
-                        .append("@MaximumStack", "#MaximumStackInput.Value"),
+                        .append("@RespectExternalChanges", "#RespectExternalChangesCheck.Value"),
                 false
         );
         for (int slot = 0; slot < PAGE_SIZE; slot++) {
@@ -356,7 +352,6 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
         renderSettings(commands);
         renderRules(commands, filtered);
         renderStatus(commands);
-        renderReport(commands);
     }
 
     private void renderTabs(UICommandBuilder commands) {
@@ -379,7 +374,6 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
         commands.set("#AllowRuntimeDecreasesCheck.Value", config.allowRuntimeDecreases);
         commands.set("#RestoreUnmatchedCheck.Value", config.restoreUnmatchedItems);
         commands.set("#RespectExternalChangesCheck.Value", config.respectExternalChanges);
-        commands.set("#MaximumStackInput.Value", config.maximumStack);
     }
 
     private void renderRules(UICommandBuilder commands, List<Integer> filtered) {
@@ -425,24 +419,6 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
         boolean visible = status != null && !status.isBlank();
         commands.set("#StatusGroup.Visible", visible);
         setSeverityLabels(commands, "Status", statusSeverity, visible ? status : "");
-    }
-
-    private void renderReport(UICommandBuilder commands) {
-        StackApplyReport report = plugin.getApplyService().lastReport();
-        String text = translate(
-                "messages.report",
-                report.scanned,
-                report.matched,
-                report.changed,
-                report.blockedCount(),
-                report.failures
-        );
-        LogSeverity severity = report.failures > 0
-                ? LogSeverity.ERROR
-                : report.blockedCount() > 0
-                ? LogSeverity.WARNING
-                : LogSeverity.SUCCESS;
-        setSeverityLabels(commands, "Report", severity, text);
         commands.set("#ViewLogButton.Disabled", !plugin.getOperationLogService().hasEntries());
     }
 
@@ -472,6 +448,7 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
         setText(commands, "#ViewLogButton", translate("ui.admin.view_log"));
         setText(commands, "#GlobalSettingsLabel", translate("ui.admin.global_settings"));
         setText(commands, "#EnabledLabel", translate("ui.admin.enabled"));
+        setText(commands, "#EnabledHintLabel", translate("ui.admin.enabled_hint"));
         setText(commands, "#SafeModeLabel", translate("ui.admin.safe_mode"));
         setText(commands, "#RespectExternalChangesLabel", translate("ui.admin.respect_external"));
         setText(commands, "#AllowDecreasesLabel", translate("ui.admin.allow_decreases"));
@@ -479,7 +456,6 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
         setText(commands, "#RestoreUnmatchedLabel", translate("ui.admin.restore_unmatched"));
         setText(commands, "#GlobalLimitEnabledLabel", translate("ui.admin.global_limit_enabled"));
         setText(commands, "#GlobalStackLimitLabel", translate("ui.admin.global_stack_limit"));
-        setText(commands, "#MaximumStackLabel", translate("ui.admin.maximum_stack"));
         setText(commands, "#SaveGeneralButton", translate("ui.admin.save_settings"));
         setText(commands, "#SearchLabel", translate("ui.admin.search_label"));
         commands.set("#SearchField.PlaceholderText", translate("ui.admin.search_placeholder"));
@@ -487,7 +463,6 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
         setText(commands, "#ClearSearchButton", translate("ui.admin.clear_search"));
         setText(commands, "#NewRuleButton", translate("ui.admin.new_rule"));
         setText(commands, "#ReloadButton", translate("ui.admin.reload_json"));
-        setText(commands, "#ExportButton", translate("ui.admin.export_catalog"));
         setText(commands, "#RulesLabel", translate("ui.admin.rules"));
         setText(commands, "#PreviousButton", translate("ui.common.previous"));
         setText(commands, "#NextButton", translate("ui.common.next"));
@@ -579,7 +554,6 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
                 .append(new KeyedCodec<>("@AllowRuntimeDecreases", Codec.BOOLEAN), (data, value) -> data.allowRuntimeDecreases = value, data -> data.allowRuntimeDecreases).add()
                 .append(new KeyedCodec<>("@RestoreUnmatched", Codec.BOOLEAN), (data, value) -> data.restoreUnmatched = value, data -> data.restoreUnmatched).add()
                 .append(new KeyedCodec<>("@RespectExternalChanges", Codec.BOOLEAN), (data, value) -> data.respectExternalChanges = value, data -> data.respectExternalChanges).add()
-                .append(new KeyedCodec<>("@MaximumStack", Codec.INTEGER), (data, value) -> data.maximumStack = value, data -> data.maximumStack).add()
                 .build();
 
         public String action = "";
@@ -592,6 +566,5 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
         public boolean allowRuntimeDecreases;
         public boolean restoreUnmatched;
         public boolean respectExternalChanges;
-        public int maximumStack;
     }
 }
