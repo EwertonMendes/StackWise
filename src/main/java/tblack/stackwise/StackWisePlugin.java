@@ -12,6 +12,8 @@ import tblack.stackwise.config.ConfigOperationResult;
 import tblack.stackwise.config.StackWiseConfig;
 import tblack.stackwise.config.ValidationResult;
 import tblack.stackwise.diagnostics.OperationLogService;
+import tblack.stackwise.icon.HytaleItemIconCatalog;
+import tblack.stackwise.icon.ItemIconCatalog;
 import tblack.stackwise.migration.OverstackedRuleMigration;
 import tblack.stackwise.migration.RuleMigrationResult;
 import tblack.stackwise.migration.RuleMigrationService;
@@ -32,6 +34,7 @@ public final class StackWisePlugin extends JavaPlugin {
     private final RuleMigrationService migrationService;
     private final PermissionService permissionService = new PermissionService();
     private final OperationLogService operationLogService = new OperationLogService();
+    private final ItemIconCatalog itemIconCatalog = new HytaleItemIconCatalog();
     private StackWiseConfig config;
     private StackApplyService applyService;
 
@@ -81,6 +84,10 @@ public final class StackWisePlugin extends JavaPlugin {
 
     public OperationLogService getOperationLogService() {
         return operationLogService;
+    }
+
+    public ItemIconCatalog getItemIconCatalog() {
+        return itemIconCatalog;
     }
 
     public synchronized OperationResult reloadFromDisk() {
@@ -220,6 +227,7 @@ public final class StackWisePlugin extends JavaPlugin {
     }
 
     private void onItemAssetsLoaded(@Nonnull LoadedAssetsEvent<String, Item, DefaultAssetMap<String, Item>> event) {
+        itemIconCatalog.invalidate();
         StackApplyReport report = applyService.onAssetsLoaded(event.getAssetMap().getAssetMap(), config);
         operationLogService.recordReport(
                 "messages.assets_applied",

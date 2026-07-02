@@ -25,7 +25,7 @@ if (project.hasProperty('hytale_home')) {
 hytaleHome = hytaleHome.replace('\\', '/')
 
 group = project.findProperty('maven_group')?.toString() ?: 'tblack.stackwise'
-version = project.findProperty('version')?.toString() ?: '1.0.0'
+version = project.findProperty('version')?.toString() ?: '1.1.0'
 
 def patchline = (project.findProperty('patchline') ?: 'release').toString()
 def gameDir = "${hytaleHome}/install/${patchline}/package/game/latest"
@@ -102,6 +102,9 @@ sourceSets {
             include 'tblack/stackwise/rule/RuleCompilerTest.java'
             include 'tblack/stackwise/ui/CommonStylingPolicyTest.java'
             include 'tblack/stackwise/ui/UiContractTest.java'
+            include 'tblack/stackwise/ui/RuleEditorDraftTest.java'
+            include 'tblack/stackwise/ui/RuleCardLayoutTest.java'
+            include 'tblack/stackwise/icon/ItemIconEntryTest.java'
             include 'tblack/stackwise/stack/StackApplyServiceTest.java'
             include 'tblack/stackwise/stack/ReflectionItemStackLimitAdapterTest.java'
             include 'tblack/stackwise/build/BuildConfigurationTest.java'

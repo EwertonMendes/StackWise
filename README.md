@@ -12,6 +12,7 @@ StackWise is a server-side Hytale mod for safe, deterministic, and configurable 
 - Protection against live decreases and external mod conflicts
 - Restoration when StackWise is disabled or an item stops matching
 - Searchable, paginated, localized Custom UI
+- Optional item icons for faster visual rule identification
 - Actionable player-facing operation log and full technical server logging
 - Manual Overstacked migration through `/stackwise import overstacked`
 - Atomic configuration writes, backups, and validation
@@ -26,7 +27,7 @@ StackWise is a server-side Hytale mod for safe, deterministic, and configurable 
 ## Installation
 
 1. Run `./gradlew clean build`.
-2. Copy `build/libs/StackWise-1.0.0.jar` to the server `mods` directory.
+2. Copy `build/libs/StackWise-1.1.0.jar` to the server `mods` directory.
 3. Remove older StackWise JARs.
 4. Start the server.
 5. Edit `mods/Tblack_StackWise/config.json` or open `/stackwise` in game.
@@ -48,7 +49,7 @@ The default alias is `/sw`. The default administration permission is `stackwise.
 
 ## Configuration
 
-The generated schema starts at `configVersion: 1`. The public JSON contains only values that change StackWise behavior. Validation limits are internal constants:
+The generated schema starts at `configVersion: 1`. The public JSON contains behavior settings and optional administration metadata. Validation limits are internal constants:
 
 - Minimum configurable stack: `1`
 - Maximum configurable stack: `999999`
@@ -56,7 +57,7 @@ The generated schema starts at `configVersion: 1`. The public JSON contains only
 
 `globalStackLimit` remains editable. Values outside the supported range are rejected before the active configuration is replaced.
 
-A complete example is available in `config.example.json`.
+A complete example is available in `config.example.json`. Each rule may optionally store an `iconItemId`; this affects only the administration interface and never changes rule matching.
 
 ### Global limit
 

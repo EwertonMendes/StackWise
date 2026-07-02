@@ -10,6 +10,8 @@ import com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.entity.entities.player.pages.InteractiveCustomUIPage;
+import com.hypixel.hytale.server.core.ui.Anchor;
+import com.hypixel.hytale.server.core.ui.Value;
 import com.hypixel.hytale.server.core.ui.builder.EventData;
 import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
 import com.hypixel.hytale.server.core.ui.builder.UIEventBuilder;
@@ -400,19 +402,94 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
             boolean confirming = Integer.valueOf(index).equals(pendingDeleteIndex);
             commands.set("#RuleActions" + slot + ".Visible", !confirming);
             commands.set("#DeleteConfirmation" + slot + ".Visible", confirming);
+            renderRuleIcon(commands, slot, rule);
             commands.set("#RuleName" + slot + ".TextSpans", Message.raw(
                     rule.id + " - " + translate(rule.enabled ? "ui.common.enabled" : "ui.common.disabled")
             ));
             String target = actionLabel(rule.action) + " - " + matchTypeLabel(rule.matchType) + " - " + rule.value;
             String limit = rule.action == RuleAction.SET ? " => " + rule.maxStack : "";
             String matches = translate("ui.admin.matches", plugin.getApplyService().matchCount(rule.id));
-            commands.set("#RuleDescription" + slot + ".TextSpans", Message.raw(
-                    target + limit + " - " + translate("ui.admin.priority", rule.priority) + " - " + matches
-            ));
+            String description = target + limit + " - " + translate("ui.admin.priority", rule.priority) + " - " + matches;
+            RuleCardLayout.Dimensions dimensions = RuleCardLayout.measure(description);
+            applyRuleCardLayout(commands, slot, dimensions);
+            commands.set("#RuleDescription" + slot + ".TextSpans", Message.raw(description));
             commands.set("#DeleteConfirmationLabel" + slot + ".TextSpans", Message.raw(
                     translate("ui.admin.delete_confirmation", rule.id)
             ));
         }
+    }
+
+
+    private void applyRuleCardLayout(
+            UICommandBuilder commands,
+            int slot,
+            RuleCardLayout.Dimensions dimensions
+    ) {
+        commands.setObject(
+                "#RuleRow" + slot + ".Anchor",
+                anchor(null, dimensions.rowHeight(), null, null, RuleCardLayout.ROW_GAP)
+        );
+        commands.setObject(
+                "#RuleIconPanel" + slot + ".Anchor",
+                anchor(
+                        RuleCardLayout.ICON_WIDTH,
+                        RuleCardLayout.ICON_HEIGHT,
+                        dimensions.centeredTop(RuleCardLayout.ICON_HEIGHT),
+                        RuleCardLayout.CONTENT_GAP,
+                        null
+                )
+        );
+        commands.setObject(
+                "#RuleText" + slot + ".Anchor",
+                anchor(null, dimensions.textHeight(), null, RuleCardLayout.CONTENT_GAP, null)
+        );
+        commands.setObject(
+                "#RuleDescription" + slot + ".Anchor",
+                anchor(null, dimensions.descriptionHeight(), null, null, null)
+        );
+        commands.setObject(
+                "#RuleActions" + slot + ".Anchor",
+                anchor(
+                        RuleCardLayout.ACTIONS_WIDTH,
+                        RuleCardLayout.ACTIONS_HEIGHT,
+                        dimensions.centeredTop(RuleCardLayout.ACTIONS_HEIGHT),
+                        null,
+                        null
+                )
+        );
+        commands.setObject(
+                "#DeleteConfirmation" + slot + ".Anchor",
+                anchor(
+                        RuleCardLayout.CONFIRMATION_WIDTH,
+                        RuleCardLayout.CONFIRMATION_HEIGHT,
+                        dimensions.centeredTop(RuleCardLayout.CONFIRMATION_HEIGHT),
+                        null,
+                        null
+                )
+        );
+    }
+
+    private Anchor anchor(Integer width, Integer height, Integer top, Integer right, Integer bottom) {
+        Anchor anchor = new Anchor();
+        if (width != null) anchor.setWidth(Value.of(width));
+        if (height != null) anchor.setHeight(Value.of(height));
+        if (top != null) anchor.setTop(Value.of(top));
+        if (right != null) anchor.setRight(Value.of(right));
+        if (bottom != null) anchor.setBottom(Value.of(bottom));
+        return anchor;
+    }
+
+    private void renderRuleIcon(UICommandBuilder commands, int slot, StackRule rule) {
+        String itemId = rule.iconItemId;
+        boolean hasIcon = itemId != null && !itemId.isBlank();
+        boolean validIcon = hasIcon && plugin.getItemIconCatalog().isValidItemId(itemId);
+        commands.set("#RuleIcon" + slot + ".Visible", validIcon);
+        if (validIcon) {
+            commands.set("#RuleIcon" + slot + ".ItemId", itemId);
+            commands.set("#RuleIcon" + slot + ".ShowItemTooltip", false);
+        }
+        commands.set("#RuleNoIcon" + slot + ".Visible", !hasIcon);
+        commands.set("#RuleMissingIcon" + slot + ".Visible", hasIcon && !validIcon);
     }
 
     private void renderStatus(UICommandBuilder commands) {
@@ -472,6 +549,8 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
             setText(commands, "#DeleteButton" + slot, translate("ui.common.delete"));
             setText(commands, "#CancelDeleteButton" + slot, translate("ui.common.cancel"));
             setText(commands, "#ConfirmDeleteButton" + slot, translate("ui.common.confirm_delete"));
+            setText(commands, "#RuleNoIcon" + slot, translate("ui.admin.no_icon"));
+            setText(commands, "#RuleMissingIcon" + slot, translate("ui.admin.icon_unavailable"));
         }
     }
 
@@ -486,7 +565,9 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
         for (int index = 0; index < config.rules.size(); index++) {
             StackRule rule = config.rules.get(index);
             if (rule == null) continue;
-            if (query.isBlank() || contains(rule.id, query) || contains(rule.value, query)) indexes.add(index);
+            if (query.isBlank() || contains(rule.id, query) || contains(rule.value, query) || contains(rule.iconItemId, query)) {
+                indexes.add(index);
+            }
         }
         return indexes;
     }

@@ -14,6 +14,7 @@ public final class ConfigValidator {
     private static final int MAX_RULES = 5000;
     private static final int MAX_ID_LENGTH = 64;
     private static final int MAX_VALUE_LENGTH = 256;
+    private static final int MAX_ICON_ITEM_ID_LENGTH = 256;
 
     public ValidationResult validate(StackWiseConfig config) {
         ValidationResult result = new ValidationResult();
@@ -66,6 +67,9 @@ public final class ConfigValidator {
         }
         if (rule.action == RuleAction.SET) validateStackLimit(path + ".maxStack", rule.maxStack, result);
         if (rule.priority < -10000 || rule.priority > 10000) result.addError(path + ".priority", "validation.priority_range");
+        if (rule.iconItemId != null && rule.iconItemId.length() > MAX_ICON_ITEM_ID_LENGTH) {
+            result.addError(path + ".iconItemId", "validation.max_characters", MAX_ICON_ITEM_ID_LENGTH);
+        }
     }
 
     private void validateStackLimit(String path, int value, ValidationResult result) {

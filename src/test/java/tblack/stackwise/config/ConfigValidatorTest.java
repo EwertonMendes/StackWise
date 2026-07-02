@@ -94,6 +94,17 @@ class ConfigValidatorTest {
     }
 
     @Test
+    void excessivelyLongOptionalIconIdIsRejected() {
+        StackWiseConfig config = new StackWiseConfig();
+        config.rules.getFirst().iconItemId = "x".repeat(257);
+
+        ValidationResult result = validator.validate(config);
+
+        assertFalse(result.isValid());
+        assertTrue(result.errors().stream().anyMatch(issue -> issue.path().endsWith(".iconItemId")));
+    }
+
+    @Test
     void invalidRuleIdIsRejected() {
         StackWiseConfig config = new StackWiseConfig();
         config.rules = new ArrayList<>();

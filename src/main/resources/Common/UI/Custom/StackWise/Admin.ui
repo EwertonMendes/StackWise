@@ -88,30 +88,41 @@ $Common.@PageOverlay {
           }
 
         Group #RuleRow0 {
-          Anchor: (Height: 78, Bottom: 8);
+          Anchor: (Height: 116, Bottom: 8);
           LayoutMode: Left;
           Padding: (Top: 4, Bottom: 4, Left: 12, Right: 12);
           Background: #1d3044(0.78);
           OutlineColor: #45617d(0.85);
           OutlineSize: 1;
 
-          Group {
+          Group #RuleIconPanel0 {
+            Anchor: (Width: 62, Height: 60, Top: 24, Right: 12);
+            LayoutMode: Center;
+            Background: #142437(0.92);
+            OutlineColor: #55728f(0.72);
+            OutlineSize: 1;
+            ItemIcon #RuleIcon0 { Anchor: (Width: 50, Height: 48); ItemId: "Ingredient_Stick"; ShowItemTooltip: false; HitTestVisible: false; Visible: false; }
+            Label #RuleNoIcon0 { Style: (...$Common.@DefaultLabelStyle, FontSize: 9, Wrap: true, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #8398ad); Anchor: (Width: 54, Height: 42); Text: "No icon"; }
+            Label #RuleMissingIcon0 { Style: (...$Common.@DefaultLabelStyle, FontSize: 9, Wrap: true, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #e9b65f); Anchor: (Width: 54, Height: 42); Text: "Unavailable"; Visible: false; }
+          }
+
+          Group #RuleText0 {
             FlexWeight: 1;
-            Anchor: (Height: 68, Right: 12);
+            Anchor: (Height: 108, Right: 12);
             LayoutMode: Top;
             Label #RuleName0 { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 28); Text: "Rule"; }
-            Label #RuleDescription0 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 40); Text: "Rule details"; }
+            Label #RuleDescription0 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 80); Text: "Rule details"; }
           }
 
           Group #RuleActions0 {
-            Anchor: (Width: 302, Height: 50);
+            Anchor: (Width: 302, Height: 50, Top: 29);
             LayoutMode: Left;
             $Common.@SecondaryTextButton #EditButton0 { @Text = "Edit"; Anchor: (Width: 120, Height: 44, Right: 10); }
             $Common.@CancelTextButton #DeleteButton0 { @Text = "Delete"; Anchor: (Width: 172, Height: 44); }
           }
 
           Group #DeleteConfirmation0 {
-            Anchor: (Width: 690, Height: 62);
+            Anchor: (Width: 690, Height: 62, Top: 23);
             LayoutMode: Left;
             Visible: false;
 
@@ -127,30 +138,41 @@ $Common.@PageOverlay {
           }
         }
         Group #RuleRow1 {
-          Anchor: (Height: 78, Bottom: 8);
+          Anchor: (Height: 116, Bottom: 8);
           LayoutMode: Left;
           Padding: (Top: 4, Bottom: 4, Left: 12, Right: 12);
           Background: #1d3044(0.78);
           OutlineColor: #45617d(0.85);
           OutlineSize: 1;
 
-          Group {
+          Group #RuleIconPanel1 {
+            Anchor: (Width: 62, Height: 60, Top: 24, Right: 12);
+            LayoutMode: Center;
+            Background: #142437(0.92);
+            OutlineColor: #55728f(0.72);
+            OutlineSize: 1;
+            ItemIcon #RuleIcon1 { Anchor: (Width: 50, Height: 48); ItemId: "Ingredient_Stick"; ShowItemTooltip: false; HitTestVisible: false; Visible: false; }
+            Label #RuleNoIcon1 { Style: (...$Common.@DefaultLabelStyle, FontSize: 9, Wrap: true, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #8398ad); Anchor: (Width: 54, Height: 42); Text: "No icon"; }
+            Label #RuleMissingIcon1 { Style: (...$Common.@DefaultLabelStyle, FontSize: 9, Wrap: true, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #e9b65f); Anchor: (Width: 54, Height: 42); Text: "Unavailable"; Visible: false; }
+          }
+
+          Group #RuleText1 {
             FlexWeight: 1;
-            Anchor: (Height: 68, Right: 12);
+            Anchor: (Height: 108, Right: 12);
             LayoutMode: Top;
             Label #RuleName1 { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 28); Text: "Rule"; }
-            Label #RuleDescription1 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 40); Text: "Rule details"; }
+            Label #RuleDescription1 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 80); Text: "Rule details"; }
           }
 
           Group #RuleActions1 {
-            Anchor: (Width: 302, Height: 50);
+            Anchor: (Width: 302, Height: 50, Top: 29);
             LayoutMode: Left;
             $Common.@SecondaryTextButton #EditButton1 { @Text = "Edit"; Anchor: (Width: 120, Height: 44, Right: 10); }
             $Common.@CancelTextButton #DeleteButton1 { @Text = "Delete"; Anchor: (Width: 172, Height: 44); }
           }
 
           Group #DeleteConfirmation1 {
-            Anchor: (Width: 690, Height: 62);
+            Anchor: (Width: 690, Height: 62, Top: 23);
             LayoutMode: Left;
             Visible: false;
 
@@ -166,30 +188,41 @@ $Common.@PageOverlay {
           }
         }
         Group #RuleRow2 {
-          Anchor: (Height: 78, Bottom: 8);
+          Anchor: (Height: 116, Bottom: 8);
           LayoutMode: Left;
           Padding: (Top: 4, Bottom: 4, Left: 12, Right: 12);
           Background: #1d3044(0.78);
           OutlineColor: #45617d(0.85);
           OutlineSize: 1;
 
-          Group {
+          Group #RuleIconPanel2 {
+            Anchor: (Width: 62, Height: 60, Top: 24, Right: 12);
+            LayoutMode: Center;
+            Background: #142437(0.92);
+            OutlineColor: #55728f(0.72);
+            OutlineSize: 1;
+            ItemIcon #RuleIcon2 { Anchor: (Width: 50, Height: 48); ItemId: "Ingredient_Stick"; ShowItemTooltip: false; HitTestVisible: false; Visible: false; }
+            Label #RuleNoIcon2 { Style: (...$Common.@DefaultLabelStyle, FontSize: 9, Wrap: true, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #8398ad); Anchor: (Width: 54, Height: 42); Text: "No icon"; }
+            Label #RuleMissingIcon2 { Style: (...$Common.@DefaultLabelStyle, FontSize: 9, Wrap: true, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #e9b65f); Anchor: (Width: 54, Height: 42); Text: "Unavailable"; Visible: false; }
+          }
+
+          Group #RuleText2 {
             FlexWeight: 1;
-            Anchor: (Height: 68, Right: 12);
+            Anchor: (Height: 108, Right: 12);
             LayoutMode: Top;
             Label #RuleName2 { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 28); Text: "Rule"; }
-            Label #RuleDescription2 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 40); Text: "Rule details"; }
+            Label #RuleDescription2 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 80); Text: "Rule details"; }
           }
 
           Group #RuleActions2 {
-            Anchor: (Width: 302, Height: 50);
+            Anchor: (Width: 302, Height: 50, Top: 29);
             LayoutMode: Left;
             $Common.@SecondaryTextButton #EditButton2 { @Text = "Edit"; Anchor: (Width: 120, Height: 44, Right: 10); }
             $Common.@CancelTextButton #DeleteButton2 { @Text = "Delete"; Anchor: (Width: 172, Height: 44); }
           }
 
           Group #DeleteConfirmation2 {
-            Anchor: (Width: 690, Height: 62);
+            Anchor: (Width: 690, Height: 62, Top: 23);
             LayoutMode: Left;
             Visible: false;
 
@@ -205,30 +238,41 @@ $Common.@PageOverlay {
           }
         }
         Group #RuleRow3 {
-          Anchor: (Height: 78, Bottom: 8);
+          Anchor: (Height: 116, Bottom: 8);
           LayoutMode: Left;
           Padding: (Top: 4, Bottom: 4, Left: 12, Right: 12);
           Background: #1d3044(0.78);
           OutlineColor: #45617d(0.85);
           OutlineSize: 1;
 
-          Group {
+          Group #RuleIconPanel3 {
+            Anchor: (Width: 62, Height: 60, Top: 24, Right: 12);
+            LayoutMode: Center;
+            Background: #142437(0.92);
+            OutlineColor: #55728f(0.72);
+            OutlineSize: 1;
+            ItemIcon #RuleIcon3 { Anchor: (Width: 50, Height: 48); ItemId: "Ingredient_Stick"; ShowItemTooltip: false; HitTestVisible: false; Visible: false; }
+            Label #RuleNoIcon3 { Style: (...$Common.@DefaultLabelStyle, FontSize: 9, Wrap: true, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #8398ad); Anchor: (Width: 54, Height: 42); Text: "No icon"; }
+            Label #RuleMissingIcon3 { Style: (...$Common.@DefaultLabelStyle, FontSize: 9, Wrap: true, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #e9b65f); Anchor: (Width: 54, Height: 42); Text: "Unavailable"; Visible: false; }
+          }
+
+          Group #RuleText3 {
             FlexWeight: 1;
-            Anchor: (Height: 68, Right: 12);
+            Anchor: (Height: 108, Right: 12);
             LayoutMode: Top;
             Label #RuleName3 { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 28); Text: "Rule"; }
-            Label #RuleDescription3 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 40); Text: "Rule details"; }
+            Label #RuleDescription3 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 80); Text: "Rule details"; }
           }
 
           Group #RuleActions3 {
-            Anchor: (Width: 302, Height: 50);
+            Anchor: (Width: 302, Height: 50, Top: 29);
             LayoutMode: Left;
             $Common.@SecondaryTextButton #EditButton3 { @Text = "Edit"; Anchor: (Width: 120, Height: 44, Right: 10); }
             $Common.@CancelTextButton #DeleteButton3 { @Text = "Delete"; Anchor: (Width: 172, Height: 44); }
           }
 
           Group #DeleteConfirmation3 {
-            Anchor: (Width: 690, Height: 62);
+            Anchor: (Width: 690, Height: 62, Top: 23);
             LayoutMode: Left;
             Visible: false;
 
@@ -244,30 +288,41 @@ $Common.@PageOverlay {
           }
         }
         Group #RuleRow4 {
-          Anchor: (Height: 78, Bottom: 8);
+          Anchor: (Height: 116, Bottom: 8);
           LayoutMode: Left;
           Padding: (Top: 4, Bottom: 4, Left: 12, Right: 12);
           Background: #1d3044(0.78);
           OutlineColor: #45617d(0.85);
           OutlineSize: 1;
 
-          Group {
+          Group #RuleIconPanel4 {
+            Anchor: (Width: 62, Height: 60, Top: 24, Right: 12);
+            LayoutMode: Center;
+            Background: #142437(0.92);
+            OutlineColor: #55728f(0.72);
+            OutlineSize: 1;
+            ItemIcon #RuleIcon4 { Anchor: (Width: 50, Height: 48); ItemId: "Ingredient_Stick"; ShowItemTooltip: false; HitTestVisible: false; Visible: false; }
+            Label #RuleNoIcon4 { Style: (...$Common.@DefaultLabelStyle, FontSize: 9, Wrap: true, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #8398ad); Anchor: (Width: 54, Height: 42); Text: "No icon"; }
+            Label #RuleMissingIcon4 { Style: (...$Common.@DefaultLabelStyle, FontSize: 9, Wrap: true, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #e9b65f); Anchor: (Width: 54, Height: 42); Text: "Unavailable"; Visible: false; }
+          }
+
+          Group #RuleText4 {
             FlexWeight: 1;
-            Anchor: (Height: 68, Right: 12);
+            Anchor: (Height: 108, Right: 12);
             LayoutMode: Top;
             Label #RuleName4 { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 28); Text: "Rule"; }
-            Label #RuleDescription4 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 40); Text: "Rule details"; }
+            Label #RuleDescription4 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 80); Text: "Rule details"; }
           }
 
           Group #RuleActions4 {
-            Anchor: (Width: 302, Height: 50);
+            Anchor: (Width: 302, Height: 50, Top: 29);
             LayoutMode: Left;
             $Common.@SecondaryTextButton #EditButton4 { @Text = "Edit"; Anchor: (Width: 120, Height: 44, Right: 10); }
             $Common.@CancelTextButton #DeleteButton4 { @Text = "Delete"; Anchor: (Width: 172, Height: 44); }
           }
 
           Group #DeleteConfirmation4 {
-            Anchor: (Width: 690, Height: 62);
+            Anchor: (Width: 690, Height: 62, Top: 23);
             LayoutMode: Left;
             Visible: false;
 
@@ -283,30 +338,41 @@ $Common.@PageOverlay {
           }
         }
         Group #RuleRow5 {
-          Anchor: (Height: 78, Bottom: 8);
+          Anchor: (Height: 116, Bottom: 8);
           LayoutMode: Left;
           Padding: (Top: 4, Bottom: 4, Left: 12, Right: 12);
           Background: #1d3044(0.78);
           OutlineColor: #45617d(0.85);
           OutlineSize: 1;
 
-          Group {
+          Group #RuleIconPanel5 {
+            Anchor: (Width: 62, Height: 60, Top: 24, Right: 12);
+            LayoutMode: Center;
+            Background: #142437(0.92);
+            OutlineColor: #55728f(0.72);
+            OutlineSize: 1;
+            ItemIcon #RuleIcon5 { Anchor: (Width: 50, Height: 48); ItemId: "Ingredient_Stick"; ShowItemTooltip: false; HitTestVisible: false; Visible: false; }
+            Label #RuleNoIcon5 { Style: (...$Common.@DefaultLabelStyle, FontSize: 9, Wrap: true, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #8398ad); Anchor: (Width: 54, Height: 42); Text: "No icon"; }
+            Label #RuleMissingIcon5 { Style: (...$Common.@DefaultLabelStyle, FontSize: 9, Wrap: true, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #e9b65f); Anchor: (Width: 54, Height: 42); Text: "Unavailable"; Visible: false; }
+          }
+
+          Group #RuleText5 {
             FlexWeight: 1;
-            Anchor: (Height: 68, Right: 12);
+            Anchor: (Height: 108, Right: 12);
             LayoutMode: Top;
             Label #RuleName5 { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 28); Text: "Rule"; }
-            Label #RuleDescription5 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 40); Text: "Rule details"; }
+            Label #RuleDescription5 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 80); Text: "Rule details"; }
           }
 
           Group #RuleActions5 {
-            Anchor: (Width: 302, Height: 50);
+            Anchor: (Width: 302, Height: 50, Top: 29);
             LayoutMode: Left;
             $Common.@SecondaryTextButton #EditButton5 { @Text = "Edit"; Anchor: (Width: 120, Height: 44, Right: 10); }
             $Common.@CancelTextButton #DeleteButton5 { @Text = "Delete"; Anchor: (Width: 172, Height: 44); }
           }
 
           Group #DeleteConfirmation5 {
-            Anchor: (Width: 690, Height: 62);
+            Anchor: (Width: 690, Height: 62, Top: 23);
             LayoutMode: Left;
             Visible: false;
 
@@ -322,30 +388,41 @@ $Common.@PageOverlay {
           }
         }
         Group #RuleRow6 {
-          Anchor: (Height: 78, Bottom: 8);
+          Anchor: (Height: 116, Bottom: 8);
           LayoutMode: Left;
           Padding: (Top: 4, Bottom: 4, Left: 12, Right: 12);
           Background: #1d3044(0.78);
           OutlineColor: #45617d(0.85);
           OutlineSize: 1;
 
-          Group {
+          Group #RuleIconPanel6 {
+            Anchor: (Width: 62, Height: 60, Top: 24, Right: 12);
+            LayoutMode: Center;
+            Background: #142437(0.92);
+            OutlineColor: #55728f(0.72);
+            OutlineSize: 1;
+            ItemIcon #RuleIcon6 { Anchor: (Width: 50, Height: 48); ItemId: "Ingredient_Stick"; ShowItemTooltip: false; HitTestVisible: false; Visible: false; }
+            Label #RuleNoIcon6 { Style: (...$Common.@DefaultLabelStyle, FontSize: 9, Wrap: true, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #8398ad); Anchor: (Width: 54, Height: 42); Text: "No icon"; }
+            Label #RuleMissingIcon6 { Style: (...$Common.@DefaultLabelStyle, FontSize: 9, Wrap: true, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #e9b65f); Anchor: (Width: 54, Height: 42); Text: "Unavailable"; Visible: false; }
+          }
+
+          Group #RuleText6 {
             FlexWeight: 1;
-            Anchor: (Height: 68, Right: 12);
+            Anchor: (Height: 108, Right: 12);
             LayoutMode: Top;
             Label #RuleName6 { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 28); Text: "Rule"; }
-            Label #RuleDescription6 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 40); Text: "Rule details"; }
+            Label #RuleDescription6 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 80); Text: "Rule details"; }
           }
 
           Group #RuleActions6 {
-            Anchor: (Width: 302, Height: 50);
+            Anchor: (Width: 302, Height: 50, Top: 29);
             LayoutMode: Left;
             $Common.@SecondaryTextButton #EditButton6 { @Text = "Edit"; Anchor: (Width: 120, Height: 44, Right: 10); }
             $Common.@CancelTextButton #DeleteButton6 { @Text = "Delete"; Anchor: (Width: 172, Height: 44); }
           }
 
           Group #DeleteConfirmation6 {
-            Anchor: (Width: 690, Height: 62);
+            Anchor: (Width: 690, Height: 62, Top: 23);
             LayoutMode: Left;
             Visible: false;
 
@@ -361,30 +438,41 @@ $Common.@PageOverlay {
           }
         }
         Group #RuleRow7 {
-          Anchor: (Height: 78, Bottom: 8);
+          Anchor: (Height: 116, Bottom: 8);
           LayoutMode: Left;
           Padding: (Top: 4, Bottom: 4, Left: 12, Right: 12);
           Background: #1d3044(0.78);
           OutlineColor: #45617d(0.85);
           OutlineSize: 1;
 
-          Group {
+          Group #RuleIconPanel7 {
+            Anchor: (Width: 62, Height: 60, Top: 24, Right: 12);
+            LayoutMode: Center;
+            Background: #142437(0.92);
+            OutlineColor: #55728f(0.72);
+            OutlineSize: 1;
+            ItemIcon #RuleIcon7 { Anchor: (Width: 50, Height: 48); ItemId: "Ingredient_Stick"; ShowItemTooltip: false; HitTestVisible: false; Visible: false; }
+            Label #RuleNoIcon7 { Style: (...$Common.@DefaultLabelStyle, FontSize: 9, Wrap: true, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #8398ad); Anchor: (Width: 54, Height: 42); Text: "No icon"; }
+            Label #RuleMissingIcon7 { Style: (...$Common.@DefaultLabelStyle, FontSize: 9, Wrap: true, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #e9b65f); Anchor: (Width: 54, Height: 42); Text: "Unavailable"; Visible: false; }
+          }
+
+          Group #RuleText7 {
             FlexWeight: 1;
-            Anchor: (Height: 68, Right: 12);
+            Anchor: (Height: 108, Right: 12);
             LayoutMode: Top;
             Label #RuleName7 { Style: $Common.@DefaultLabelStyle; Anchor: (Height: 28); Text: "Rule"; }
-            Label #RuleDescription7 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 40); Text: "Rule details"; }
+            Label #RuleDescription7 { Style: (...$Common.@DefaultLabelStyle, Wrap: true); Anchor: (Height: 80); Text: "Rule details"; }
           }
 
           Group #RuleActions7 {
-            Anchor: (Width: 302, Height: 50);
+            Anchor: (Width: 302, Height: 50, Top: 29);
             LayoutMode: Left;
             $Common.@SecondaryTextButton #EditButton7 { @Text = "Edit"; Anchor: (Width: 120, Height: 44, Right: 10); }
             $Common.@CancelTextButton #DeleteButton7 { @Text = "Delete"; Anchor: (Width: 172, Height: 44); }
           }
 
           Group #DeleteConfirmation7 {
-            Anchor: (Width: 690, Height: 62);
+            Anchor: (Width: 690, Height: 62, Top: 23);
             LayoutMode: Left;
             Visible: false;
 

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -26,6 +27,18 @@ class ConfigManagerTest {
         assertTrue(json.contains("\"enabled\": true"));
         assertFalse(json.contains("minimumStack"));
         assertFalse(json.contains("maximumStack"));
+    }
+
+    @Test
+    void optionalIconIdsAreNormalizedBeforeSaving() throws IOException {
+        ConfigManager manager = new ConfigManager(directory);
+        StackWiseConfig config = manager.loadInitial().config();
+        config.rules.getFirst().iconItemId = "  Weapon_Arrow_Crude\0  ";
+
+        ConfigOperationResult result = manager.save(config);
+
+        assertTrue(result.success());
+        assertEquals("Weapon_Arrow_Crude", manager.get().rules.getFirst().iconItemId);
     }
 
     @Test

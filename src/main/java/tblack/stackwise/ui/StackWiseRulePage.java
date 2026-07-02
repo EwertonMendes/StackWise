@@ -21,6 +21,7 @@ import tblack.stackwise.OperationResult;
 import tblack.stackwise.StackWisePlugin;
 import tblack.stackwise.config.StackWiseConfig;
 import tblack.stackwise.i18n.I18n;
+import tblack.stackwise.icon.ItemIconEntry;
 import tblack.stackwise.rule.MatchType;
 import tblack.stackwise.rule.RuleAction;
 import tblack.stackwise.rule.StackRule;
@@ -38,6 +39,7 @@ public final class StackWiseRulePage extends InteractiveCustomUIPage<StackWiseRu
     private final int ruleIndex;
     private final int returnPage;
     private final String returnSearch;
+    private RuleEditorDraft draft;
     private boolean pendingDelete;
     private String status = "";
 
@@ -48,6 +50,17 @@ public final class StackWiseRulePage extends InteractiveCustomUIPage<StackWiseRu
             int returnPage,
             String returnSearch
     ) {
+        this(playerRef, plugin, ruleIndex, returnPage, returnSearch, null);
+    }
+
+    public StackWiseRulePage(
+            @Nonnull PlayerRef playerRef,
+            StackWisePlugin plugin,
+            int ruleIndex,
+            int returnPage,
+            String returnSearch,
+            RuleEditorDraft draft
+    ) {
         super(playerRef, CustomPageLifetime.CanDismiss, RuleEventData.CODEC);
         this.plugin = plugin;
         this.viewerRef = playerRef;
@@ -55,6 +68,7 @@ public final class StackWiseRulePage extends InteractiveCustomUIPage<StackWiseRu
         this.ruleIndex = ruleIndex;
         this.returnPage = Math.max(0, returnPage);
         this.returnSearch = returnSearch == null ? "" : returnSearch;
+        this.draft = draft;
     }
 
     @Override
@@ -64,6 +78,7 @@ public final class StackWiseRulePage extends InteractiveCustomUIPage<StackWiseRu
             @Nonnull UIEventBuilder events,
             @Nonnull Store<EntityStore> store
     ) {
+        initializeDraft();
         commands.append(LAYOUT);
         bindEvents(events);
         render(commands);
@@ -87,6 +102,8 @@ public final class StackWiseRulePage extends InteractiveCustomUIPage<StackWiseRu
         switch (data.action) {
             case "close" -> close();
             case "back" -> openAdmin(ref, store, "");
+            case "choose-icon" -> openIconPicker(ref, store, draftFrom(data));
+            case "remove-icon" -> removeIcon();
             case "delete-request" -> requestDelete();
             case "delete-cancel" -> cancelDelete();
             case "delete-confirm" -> deleteRule(ref, store);
@@ -96,17 +113,9 @@ public final class StackWiseRulePage extends InteractiveCustomUIPage<StackWiseRu
     }
 
     private void saveRule(Ref<EntityStore> ref, Store<EntityStore> store, RuleEventData data) {
+        draft = draftFrom(data);
         StackWiseConfig config = plugin.getConfig();
-        StackRule rule = new StackRule();
-        rule.id = normalizeId(data.ruleId);
-        rule.enabled = data.enabled;
-        rule.action = parseAction(data.ruleAction);
-        rule.matchType = parseMatchType(data.matchType);
-        rule.value = data.matchValue == null ? "" : data.matchValue.trim();
-        rule.maxStack = data.maxStack;
-        rule.priority = data.priority;
-        rule.allowUnsafe = data.allowUnsafe;
-
+        StackRule rule = draft.toRule();
         if (ruleIndex >= 0 && ruleIndex < config.rules.size()) config.rules.set(ruleIndex, rule);
         else config.rules.add(rule);
 
@@ -116,6 +125,33 @@ public final class StackWiseRulePage extends InteractiveCustomUIPage<StackWiseRu
             return;
         }
         openAdmin(ref, store, translate("messages.rule_saved", rule.id) + " " + result.translated(locale));
+    }
+
+    private void openIconPicker(Ref<EntityStore> ref, Store<EntityStore> store, RuleEditorDraft currentDraft) {
+        Player player = store.getComponent(ref, Player.getComponentType());
+        if (player == null) {
+            sendStatus(translate("messages.player_not_found"));
+            return;
+        }
+        draft = currentDraft;
+        player.getPageManager().openCustomPage(
+                ref,
+                store,
+                new StackWiseIconPickerPage(
+                        viewerRef,
+                        plugin,
+                        ruleIndex,
+                        returnPage,
+                        returnSearch,
+                        currentDraft
+                )
+        );
+    }
+
+    private void removeIcon() {
+        draft = draft.withIconItemId(null);
+        status = "";
+        refreshIconState();
     }
 
     private void requestDelete() {
@@ -167,41 +203,41 @@ public final class StackWiseRulePage extends InteractiveCustomUIPage<StackWiseRu
     }
 
     private void bindEvents(UIEventBuilder events) {
-        events.addEventBinding(CustomUIEventBindingType.Activating, "#ClosePageButton", EventData.of("Action", "close"), false);
-        events.addEventBinding(CustomUIEventBindingType.Activating, "#BackButton", EventData.of("Action", "back"), false);
-        events.addEventBinding(CustomUIEventBindingType.Activating, "#DeleteButton", EventData.of("Action", "delete-request"), false);
-        events.addEventBinding(CustomUIEventBindingType.Activating, "#CancelDeleteButton", EventData.of("Action", "delete-cancel"), false);
-        events.addEventBinding(CustomUIEventBindingType.Activating, "#ConfirmDeleteButton", EventData.of("Action", "delete-confirm"), false);
-        events.addEventBinding(
-                CustomUIEventBindingType.Activating,
-                "#SaveButton",
-                EventData.of("Action", "save")
-                        .append("@RuleId", "#RuleIdField.Value")
-                        .append("@RuleAction", "#ActionDropdown.Value")
-                        .append("@MatchType", "#MatchTypeDropdown.Value")
-                        .append("@MatchValue", "#MatchValueField.Value")
-                        .append("@MaxStack", "#MaxStackInput.Value")
-                        .append("@Priority", "#PriorityInput.Value")
-                        .append("@Enabled", "#EnabledCheck.Value")
-                        .append("@AllowUnsafe", "#AllowUnsafeCheck.Value"),
-                false
-        );
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#ClosePageButton", event("close"), false);
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#BackButton", event("back"), false);
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#ChooseIconButton", formEvent("choose-icon"), false);
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#RemoveIconButton", event("remove-icon"), false);
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#DeleteButton", event("delete-request"), false);
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#CancelDeleteButton", event("delete-cancel"), false);
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#ConfirmDeleteButton", event("delete-confirm"), false);
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#SaveButton", formEvent("save"), false);
+    }
+
+    private EventData event(String action) {
+        return EventData.of("Action", action);
+    }
+
+    private EventData formEvent(String action) {
+        return EventData.of("Action", action)
+                .append("@RuleId", "#RuleIdField.Value")
+                .append("@RuleAction", "#ActionDropdown.Value")
+                .append("@MatchType", "#MatchTypeDropdown.Value")
+                .append("@MatchValue", "#MatchValueField.Value")
+                .append("@MaxStack", "#MaxStackInput.Value")
+                .append("@Priority", "#PriorityInput.Value")
+                .append("@Enabled", "#EnabledCheck.Value")
+                .append("@AllowUnsafe", "#AllowUnsafeCheck.Value");
     }
 
     private void render(UICommandBuilder commands) {
-        StackWiseConfig config = plugin.getConfig();
-        StackRule rule = ruleIndex >= 0 && ruleIndex < config.rules.size()
-                ? config.rules.get(ruleIndex).copy()
-                : newRule(config);
-
         renderStaticText(commands);
-        renderDynamicText(commands, rule);
-        commands.set("#RuleIdField.Value", rule.id);
-        commands.set("#MatchValueField.Value", rule.value);
-        commands.set("#MaxStackInput.Value", rule.maxStack);
-        commands.set("#PriorityInput.Value", rule.priority);
-        commands.set("#EnabledCheck.Value", rule.enabled);
-        commands.set("#AllowUnsafeCheck.Value", rule.allowUnsafe);
+        renderDynamicText(commands);
+        commands.set("#RuleIdField.Value", draft.ruleId());
+        commands.set("#MatchValueField.Value", draft.matchValue());
+        commands.set("#MaxStackInput.Value", draft.maxStack());
+        commands.set("#PriorityInput.Value", draft.priority());
+        commands.set("#EnabledCheck.Value", draft.enabled());
+        commands.set("#AllowUnsafeCheck.Value", draft.allowUnsafe());
         commands.set("#DeleteButton.Visible", ruleIndex >= 0 && !pendingDelete);
         commands.set("#DeleteConfirmation.Visible", ruleIndex >= 0 && pendingDelete);
         commands.set("#StatusLabel.TextSpans", Message.raw(status));
@@ -210,7 +246,7 @@ public final class StackWiseRulePage extends InteractiveCustomUIPage<StackWiseRu
                 entry(translate("ui.action.set"), RuleAction.SET.name()),
                 entry(translate("ui.action.exclude"), RuleAction.EXCLUDE.name())
         ));
-        commands.set("#ActionDropdown.Value", rule.action.name());
+        commands.set("#ActionDropdown.Value", draft.action().name());
         commands.set("#MatchTypeDropdown.Entries", List.of(
                 entry(translate("ui.match_type.exact"), MatchType.EXACT.name()),
                 entry(translate("ui.match_type.prefix"), MatchType.PREFIX.name()),
@@ -218,7 +254,8 @@ public final class StackWiseRulePage extends InteractiveCustomUIPage<StackWiseRu
                 entry(translate("ui.match_type.glob"), MatchType.GLOB.name()),
                 entry(translate("ui.match_type.regex"), MatchType.REGEX.name())
         ));
-        commands.set("#MatchTypeDropdown.Value", rule.matchType.name());
+        commands.set("#MatchTypeDropdown.Value", draft.matchType().name());
+        renderIcon(commands);
     }
 
     private void renderStaticText(UICommandBuilder commands) {
@@ -228,6 +265,8 @@ public final class StackWiseRulePage extends InteractiveCustomUIPage<StackWiseRu
         setText(commands, "#MatchTypeLabel", translate("ui.rule.match_type"));
         setText(commands, "#MatchValueLabel", translate("ui.rule.match_value"));
         commands.set("#MatchValueField.PlaceholderText", translate("ui.rule.match_value_placeholder"));
+        setText(commands, "#IconLabel", translate("ui.rule.icon"));
+        setText(commands, "#IconHintLabel", translate("ui.rule.icon_hint"));
         setText(commands, "#MaxStackLabel", translate("ui.rule.maximum_stack"));
         setText(commands, "#PriorityLabel", translate("ui.rule.priority"));
         setText(commands, "#EnabledLabel", translate("ui.rule.enabled"));
@@ -240,15 +279,46 @@ public final class StackWiseRulePage extends InteractiveCustomUIPage<StackWiseRu
         setText(commands, "#ClosePageButton", translate("ui.common.close"));
     }
 
-    private void setText(UICommandBuilder commands, String selector, String value) {
-        commands.set(selector + ".TextSpans", Message.raw(value));
-    }
-
-    private void renderDynamicText(UICommandBuilder commands, StackRule rule) {
+    private void renderDynamicText(UICommandBuilder commands) {
         commands.set("#EditorTitle.TextSpans", Message.raw(translate(
                 ruleIndex >= 0 ? "ui.rule.edit_title" : "ui.rule.create_title"
         )));
-        commands.set("#DeleteConfirmationLabel.TextSpans", Message.raw(translate("ui.rule.delete_confirmation", rule.id)));
+        commands.set("#DeleteConfirmationLabel.TextSpans", Message.raw(
+                translate("ui.rule.delete_confirmation", draft.ruleId())
+        ));
+    }
+
+    private void renderIcon(UICommandBuilder commands) {
+        String itemId = draft.iconItemId();
+        boolean hasIcon = itemId != null;
+        boolean validIcon = hasIcon && plugin.getItemIconCatalog().isValidItemId(itemId);
+        ItemIconEntry entry = validIcon ? plugin.getItemIconCatalog().describe(itemId, locale) : null;
+        String displayName;
+        if (!hasIcon) displayName = translate("ui.rule.no_icon");
+        else if (!validIcon) displayName = translate("ui.rule.icon_unavailable");
+        else displayName = entry != null && entry.hasDisplayName() ? entry.displayName() : itemId;
+
+        commands.set("#SelectedIcon.Visible", validIcon);
+        if (validIcon) {
+            commands.set("#SelectedIcon.ItemId", itemId);
+            commands.set("#SelectedIcon.ShowItemTooltip", false);
+        }
+        commands.set("#NoIconLabel.Visible", !hasIcon);
+        commands.set("#MissingIconLabel.Visible", hasIcon && !validIcon);
+        commands.set("#IconNameLabel.TextSpans", Message.raw(displayName));
+        commands.set("#IconIdLabel.TextSpans", Message.raw(hasIcon ? itemId : ""));
+        setText(commands, "#ChooseIconButton", translate(hasIcon ? "ui.rule.change_icon" : "ui.rule.choose_icon"));
+        commands.set("#RemoveIconButton.Visible", hasIcon);
+        setText(commands, "#RemoveIconButton", translate("ui.rule.remove_icon"));
+    }
+
+    private void initializeDraft() {
+        if (draft != null) return;
+        StackWiseConfig config = plugin.getConfig();
+        StackRule rule = ruleIndex >= 0 && ruleIndex < config.rules.size()
+                ? config.rules.get(ruleIndex).copy()
+                : newRule(config);
+        draft = RuleEditorDraft.fromRule(rule);
     }
 
     private StackRule newRule(StackWiseConfig config) {
@@ -268,10 +338,30 @@ public final class StackWiseRulePage extends InteractiveCustomUIPage<StackWiseRu
         }
     }
 
+    private RuleEditorDraft draftFrom(RuleEventData data) {
+        return new RuleEditorDraft(
+                data.ruleId,
+                data.enabled,
+                parseAction(data.ruleAction),
+                parseMatchType(data.matchType),
+                data.matchValue,
+                data.maxStack,
+                data.priority,
+                data.allowUnsafe,
+                draft.iconItemId()
+        );
+    }
+
     private DropdownEntryInfo entry(String label, String value) {
         return new DropdownEntryInfo(LocalizableString.fromString(label), value);
     }
 
+    private void refreshIconState() {
+        UICommandBuilder updates = new UICommandBuilder();
+        renderIcon(updates);
+        updates.set("#StatusLabel.TextSpans", Message.raw(status));
+        sendUpdate(updates, false);
+    }
 
     private void refreshDeleteState() {
         UICommandBuilder updates = new UICommandBuilder();
@@ -286,11 +376,6 @@ public final class StackWiseRulePage extends InteractiveCustomUIPage<StackWiseRu
         UICommandBuilder updates = new UICommandBuilder();
         updates.set("#StatusLabel.TextSpans", Message.raw(status));
         sendUpdate(updates, false);
-    }
-
-    private String normalizeId(String value) {
-        if (value == null) return "";
-        return value.trim().toLowerCase(Locale.ROOT).replace(' ', '-');
     }
 
     private RuleAction parseAction(String value) {
@@ -317,6 +402,10 @@ public final class StackWiseRulePage extends InteractiveCustomUIPage<StackWiseRu
             return true;
         }
         return plugin.getPermissionService().hasPermission(viewerRef.getUuid(), permission);
+    }
+
+    private void setText(UICommandBuilder commands, String selector, String value) {
+        commands.set(selector + ".TextSpans", Message.raw(value));
     }
 
     private String translate(String key, Object... args) {

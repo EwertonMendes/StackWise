@@ -24,7 +24,8 @@
       "value": "Weapon_Arrow",
       "maxStack": 1000,
       "priority": 600,
-      "allowUnsafe": false
+      "allowUnsafe": false,
+      "iconItemId": null
     },
     {
       "id": "sticks",
@@ -34,7 +35,8 @@
       "value": "Ingredient_Stick",
       "maxStack": 250,
       "priority": 500,
-      "allowUnsafe": false
+      "allowUnsafe": false,
+      "iconItemId": null
     },
     {
       "id": "seeds",
@@ -44,7 +46,8 @@
       "value": "Plant_Seeds_*",
       "maxStack": 250,
       "priority": 400,
-      "allowUnsafe": false
+      "allowUnsafe": false,
+      "iconItemId": null
     },
     {
       "id": "crystal-colors",
@@ -54,7 +57,8 @@
       "value": "^Ingredient_Crystal_(Cyan|Green|Purple|Red|White)$",
       "maxStack": 150,
       "priority": 350,
-      "allowUnsafe": false
+      "allowUnsafe": false,
+      "iconItemId": null
     },
     {
       "id": "white-items",
@@ -64,7 +68,8 @@
       "value": "_White",
       "maxStack": 150,
       "priority": 300,
-      "allowUnsafe": false
+      "allowUnsafe": false,
+      "iconItemId": null
     },
     {
       "id": "exclude-swords",
@@ -74,7 +79,8 @@
       "value": "Weapon_Sword_",
       "maxStack": 1,
       "priority": 1000,
-      "allowUnsafe": false
+      "allowUnsafe": false,
+      "iconItemId": null
     }
   ]
 }

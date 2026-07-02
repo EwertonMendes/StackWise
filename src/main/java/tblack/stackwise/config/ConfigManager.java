@@ -146,8 +146,15 @@ public final class ConfigManager {
             if (rule.matchType == null) rule.matchType = MatchType.EXACT;
             if (rule.value == null) rule.value = "";
             rule.value = rule.value.trim();
+            rule.iconItemId = normalizeOptionalItemId(rule.iconItemId);
         }
         return config;
+    }
+
+    private String normalizeOptionalItemId(String value) {
+        if (value == null) return null;
+        String normalized = value.replaceAll("\\p{Cntrl}", "").trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 
     private StackWiseConfig copy(StackWiseConfig source) {

@@ -109,6 +109,9 @@ class LocalizationTest {
         assertTrue(english.containsKey("stackwise.ui.log.title"));
         assertTrue(english.containsKey("stackwise.ui.log.level.error"));
         assertTrue(english.containsKey("stackwise.ui.rule.delete_confirmation"));
+        assertTrue(english.containsKey("stackwise.ui.rule.icon"));
+        assertTrue(english.containsKey("stackwise.ui.icon_picker.title"));
+        assertTrue(english.containsKey("stackwise.ui.icon_picker.search_placeholder"));
         assertTrue(english.containsKey("stackwise.ui.action.set"));
         assertTrue(english.containsKey("stackwise.ui.action.exclude"));
         assertTrue(english.containsKey("stackwise.ui.match_type.regex"));

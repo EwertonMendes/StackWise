@@ -9,6 +9,7 @@ public class StackRule {
     public int maxStack = 100;
     public int priority = 0;
     public boolean allowUnsafe = false;
+    public String iconItemId;
 
     public StackRule copy() {
         StackRule copy = new StackRule();
@@ -20,6 +21,7 @@ public class StackRule {
         copy.maxStack = maxStack;
         copy.priority = priority;
         copy.allowUnsafe = allowUnsafe;
+        copy.iconItemId = iconItemId;
         return copy;
     }
 }

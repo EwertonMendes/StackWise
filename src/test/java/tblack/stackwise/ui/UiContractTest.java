@@ -70,13 +70,88 @@ class UiContractTest {
             assertTrue(document.contains("#RuleRow" + index));
             assertTrue(document.contains("#RuleName" + index));
             assertTrue(document.contains("#RuleDescription" + index));
+            assertTrue(document.contains("#RuleText" + index));
             assertTrue(document.contains("#EditButton" + index));
             assertTrue(document.contains("#DeleteButton" + index));
             assertTrue(document.contains("#DeleteConfirmation" + index));
             assertTrue(document.contains("#ConfirmDeleteButton" + index));
+            assertTrue(document.contains("#RuleIconPanel" + index));
+            assertTrue(document.contains("#RuleIcon" + index));
+            assertTrue(document.contains("#RuleNoIcon" + index));
+            assertTrue(document.contains("#RuleMissingIcon" + index));
         }
     }
 
+
+    @Test
+    void ruleEditorAndPickerContainTheCompleteOptionalIconFlow() throws IOException {
+        String editor = Files.readString(DIRECTORY.resolve("RuleEditor.ui"));
+        String picker = Files.readString(DIRECTORY.resolve("IconPicker.ui"));
+        String editorSource = Files.readString(Path.of(
+                "src", "main", "java", "tblack", "stackwise", "ui", "StackWiseRulePage.java"
+        ));
+        String pickerSource = Files.readString(Path.of(
+                "src", "main", "java", "tblack", "stackwise", "ui", "StackWiseIconPickerPage.java"
+        ));
+
+        assertTrue(editor.contains("#SelectedIcon"));
+        assertTrue(editor.contains("#NoIconLabel"));
+        assertTrue(editor.contains("#MissingIconLabel"));
+        assertTrue(editor.contains("#ChooseIconButton"));
+        assertTrue(editor.contains("#RemoveIconButton"));
+        assertTrue(editor.contains("ShowItemTooltip: false"));
+        assertTrue(picker.contains("#SearchField"));
+        assertTrue(picker.contains("#NoResultsLabel"));
+        assertTrue(picker.contains("#RemoveIconButton"));
+        assertTrue(picker.contains("#IconRow3"));
+        assertTrue(picker.contains("#IconButton23"));
+        assertTrue(picker.contains("#IconSlot23"));
+        assertTrue(pickerSource.contains("CustomUIEventBindingType.Validating"));
+        assertTrue(pickerSource.contains("searchEvent()"));
+        assertTrue(editorSource.contains("formEvent(\"choose-icon\")"));
+        assertTrue(picker.contains("Label #PickerTitle"));
+        assertFalse(picker.contains("Label #Title"));
+        assertTrue(pickerSource.contains("setText(commands, \"#PickerTitle\""));
+    }
+
+    @Test
+    void iconPickerCardsKeepFixedCompactDimensions() throws IOException {
+        String picker = Files.readString(DIRECTORY.resolve("IconPicker.ui"));
+
+        for (int row = 0; row < 4; row++) {
+            String rowBlock = block(picker, "Group #IconRow" + row);
+            assertTrue(rowBlock.contains("Padding: (Left: 29, Right: 29)"));
+        }
+        for (int slot = 0; slot < 24; slot++) {
+            String cell = block(picker, "Group #IconCell" + slot);
+            assertTrue(cell.contains("Width: 140"));
+            assertTrue(cell.contains("Height: 120"));
+            assertFalse(cell.contains("FlexWeight"));
+        }
+    }
+
+    @Test
+    void iconSectionContainsItsActionsAndRuleCardsGrowWithTheirDescriptions() throws IOException {
+        String editor = Files.readString(DIRECTORY.resolve("RuleEditor.ui"));
+        String admin = Files.readString(DIRECTORY.resolve("Admin.ui"));
+        String source = Files.readString(Path.of(
+                "src", "main", "java", "tblack", "stackwise", "ui", "StackWiseAdminPage.java"
+        ));
+
+        String iconSection = block(editor, "Group #IconSection");
+        assertTrue(iconSection.contains("Anchor: (Height: 150"));
+        assertTrue(iconSection.contains("Group #IconActions"));
+        assertTrue(iconSection.contains("Anchor: (Height: 36)"));
+        assertTrue(iconSection.contains("#ChooseIconButton"));
+        assertTrue(admin.contains("Anchor: (Height: 116, Bottom: 8)"));
+        assertTrue(admin.contains("Anchor: (Height: 80)"));
+        assertTrue(source.contains("RuleCardLayout.measure(description)"));
+        assertTrue(source.contains("applyRuleCardLayout(commands, slot, dimensions)"));
+        assertTrue(source.contains("commands.setObject("));
+        assertTrue(source.contains("\"#RuleRow\" + slot + \".Anchor\""));
+        assertTrue(source.contains("\"#RuleDescription\" + slot + \".Anchor\""));
+        assertFalse(source.contains(".Anchor.Height"));
+    }
 
     @Test
     void stackLimitInputsUseTheSupportedHardMaximum() throws IOException {
@@ -218,6 +293,10 @@ class UiContractTest {
         assertStaticSelectorsExist(
                 Path.of("src", "main", "java", "tblack", "stackwise", "ui", "StackWiseRulePage.java"),
                 DIRECTORY.resolve("RuleEditor.ui")
+        );
+        assertStaticSelectorsExist(
+                Path.of("src", "main", "java", "tblack", "stackwise", "ui", "StackWiseIconPickerPage.java"),
+                DIRECTORY.resolve("IconPicker.ui")
         );
         assertStaticSelectorsExist(
                 Path.of("src", "main", "java", "tblack", "stackwise", "ui", "StackWiseLogPage.java"),
