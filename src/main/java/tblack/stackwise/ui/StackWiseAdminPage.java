@@ -11,6 +11,8 @@ import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.entity.entities.player.pages.InteractiveCustomUIPage;
 import com.hypixel.hytale.server.core.ui.Anchor;
+import com.hypixel.hytale.server.core.ui.DropdownEntryInfo;
+import com.hypixel.hytale.server.core.ui.LocalizableString;
 import com.hypixel.hytale.server.core.ui.Value;
 import com.hypixel.hytale.server.core.ui.builder.EventData;
 import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
@@ -19,6 +21,7 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import tblack.stackwise.OperationResult;
 import tblack.stackwise.StackWisePlugin;
+import tblack.stackwise.config.GlobalStackMode;
 import tblack.stackwise.config.StackWiseConfig;
 import tblack.stackwise.diagnostics.LogSeverity;
 import tblack.stackwise.i18n.I18n;
@@ -114,6 +117,7 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
             case "previous" -> previousPage();
             case "next" -> nextPage();
             case "new" -> openRuleEditor(ref, store, -1);
+            case "global-mode-changed" -> previewGlobalMode(data.globalStackMode);
             case "save-general" -> saveGeneral(data);
             case "reload" -> finish(plugin.reloadFromDisk());
             case "view-log" -> openLog(ref, store);
@@ -163,13 +167,24 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
         StackWiseConfig config = plugin.getConfig();
         config.enabled = data.enabled;
         config.globalLimitEnabled = data.globalLimitEnabled;
+        config.globalStackMode = parseGlobalStackMode(data.globalStackMode, config.globalStackMode);
         config.globalStackLimit = data.globalStackLimit;
+        config.globalStackMultiplier = data.globalStackMultiplier;
+        config.globalStackCap = data.globalStackCap;
         config.safeMode = data.safeMode;
         config.allowDecreases = data.allowDecreases;
         config.allowRuntimeDecreases = data.allowRuntimeDecreases;
         config.restoreUnmatchedItems = data.restoreUnmatched;
         config.respectExternalChanges = data.respectExternalChanges;
         finish(plugin.saveAndApply(config));
+    }
+
+    private void previewGlobalMode(String value) {
+        StackWiseConfig config = plugin.getConfig();
+        GlobalStackMode mode = parseGlobalStackMode(value, config.globalStackMode);
+        UICommandBuilder commands = new UICommandBuilder();
+        renderGlobalModeDetails(commands, mode);
+        sendUpdate(commands, false);
     }
 
     private boolean handleSlotAction(Ref<EntityStore> ref, Store<EntityStore> store, String action) {
@@ -309,12 +324,22 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
                 false
         );
         events.addEventBinding(
+                CustomUIEventBindingType.ValueChanged,
+                "#GlobalStackModeDropdown",
+                EventData.of("Action", "global-mode-changed")
+                        .append("@GlobalStackMode", "#GlobalStackModeDropdown.Value"),
+                false
+        );
+        events.addEventBinding(
                 CustomUIEventBindingType.Activating,
                 "#SaveGeneralButton",
                 EventData.of("Action", "save-general")
                         .append("@Enabled", "#EnabledCheck.Value")
                         .append("@GlobalLimitEnabled", "#GlobalLimitEnabledCheck.Value")
+                        .append("@GlobalStackMode", "#GlobalStackModeDropdown.Value")
                         .append("@GlobalStackLimit", "#GlobalStackLimitInput.Value")
+                        .append("@GlobalStackMultiplier", "#GlobalStackMultiplierInput.Value")
+                        .append("@GlobalStackCap", "#GlobalStackCapInput.Value")
                         .append("@SafeMode", "#SafeModeCheck.Value")
                         .append("@AllowDecreases", "#AllowDecreasesCheck.Value")
                         .append("@AllowRuntimeDecreases", "#AllowRuntimeDecreasesCheck.Value")
@@ -370,12 +395,34 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
         StackWiseConfig config = plugin.getConfig();
         commands.set("#EnabledCheck.Value", config.enabled);
         commands.set("#GlobalLimitEnabledCheck.Value", config.globalLimitEnabled);
+        commands.set("#GlobalStackModeDropdown.Entries", List.of(
+                entry(translate("ui.global_mode.fixed"), GlobalStackMode.FIXED.name()),
+                entry(translate("ui.global_mode.multiplier"), GlobalStackMode.MULTIPLIER.name())
+        ));
+        commands.set("#GlobalStackModeDropdown.Value", config.globalStackMode.name());
+        renderGlobalModeDetails(commands, config.globalStackMode);
         commands.set("#GlobalStackLimitInput.Value", config.globalStackLimit);
+        commands.set("#GlobalStackMultiplierInput.Value", config.globalStackMultiplier);
+        commands.set("#GlobalStackCapInput.Value", config.globalStackCap);
         commands.set("#SafeModeCheck.Value", config.safeMode);
         commands.set("#AllowDecreasesCheck.Value", config.allowDecreases);
         commands.set("#AllowRuntimeDecreasesCheck.Value", config.allowRuntimeDecreases);
         commands.set("#RestoreUnmatchedCheck.Value", config.restoreUnmatchedItems);
         commands.set("#RespectExternalChangesCheck.Value", config.respectExternalChanges);
+    }
+
+    private void renderGlobalModeDetails(UICommandBuilder commands, GlobalStackMode mode) {
+        GlobalStackMode selected = mode == null ? GlobalStackMode.FIXED : mode;
+        boolean fixed = selected == GlobalStackMode.FIXED;
+        setText(
+                commands,
+                "#GlobalStackModeHintLabel",
+                translate(fixed
+                        ? "ui.admin.global_stack_mode_fixed_hint"
+                        : "ui.admin.global_stack_mode_multiplier_hint")
+        );
+        commands.set("#FixedModeCard.Visible", fixed);
+        commands.set("#MultiplierModeCard.Visible", !fixed);
     }
 
     private void renderRules(UICommandBuilder commands, List<Integer> filtered) {
@@ -524,6 +571,8 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
         setText(commands, "#SettingsTabInactive", translate("ui.admin.tab_settings"));
         setText(commands, "#ViewLogButton", translate("ui.admin.view_log"));
         setText(commands, "#GlobalSettingsLabel", translate("ui.admin.global_settings"));
+        setText(commands, "#BehaviorSettingsLabel", translate("ui.admin.behavior_settings"));
+        setText(commands, "#GlobalLimitSettingsLabel", translate("ui.admin.global_limit_settings"));
         setText(commands, "#EnabledLabel", translate("ui.admin.enabled"));
         setText(commands, "#EnabledHintLabel", translate("ui.admin.enabled_hint"));
         setText(commands, "#SafeModeLabel", translate("ui.admin.safe_mode"));
@@ -532,7 +581,13 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
         setText(commands, "#AllowRuntimeDecreasesLabel", translate("ui.admin.allow_runtime_decreases"));
         setText(commands, "#RestoreUnmatchedLabel", translate("ui.admin.restore_unmatched"));
         setText(commands, "#GlobalLimitEnabledLabel", translate("ui.admin.global_limit_enabled"));
+        setText(commands, "#GlobalStackModeLabel", translate("ui.admin.global_stack_mode"));
         setText(commands, "#GlobalStackLimitLabel", translate("ui.admin.global_stack_limit"));
+        setText(commands, "#GlobalStackMultiplierLabel", translate("ui.admin.global_stack_multiplier"));
+        setText(commands, "#GlobalStackCapLabel", translate("ui.admin.global_stack_cap"));
+        setText(commands, "#FixedModeCardLabel", translate("ui.global_mode.fixed"));
+        setText(commands, "#MultiplierModeCardLabel", translate("ui.global_mode.multiplier"));
+        setText(commands, "#LiveApplyHintLabel", translate("ui.admin.live_apply_hint"));
         setText(commands, "#SaveGeneralButton", translate("ui.admin.save_settings"));
         setText(commands, "#SearchLabel", translate("ui.admin.search_label"));
         commands.set("#SearchField.PlaceholderText", translate("ui.admin.search_placeholder"));
@@ -543,7 +598,6 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
         setText(commands, "#RulesLabel", translate("ui.admin.rules"));
         setText(commands, "#PreviousButton", translate("ui.common.previous"));
         setText(commands, "#NextButton", translate("ui.common.next"));
-        setText(commands, "#ClosePageButton", translate("ui.common.close"));
         for (int slot = 0; slot < PAGE_SIZE; slot++) {
             setText(commands, "#EditButton" + slot, translate("ui.common.edit"));
             setText(commands, "#DeleteButton" + slot, translate("ui.common.delete"));
@@ -623,13 +677,28 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
         return I18n.translate(locale, key, args);
     }
 
+    private DropdownEntryInfo entry(String label, String value) {
+        return new DropdownEntryInfo(LocalizableString.fromString(label), value);
+    }
+
+    private GlobalStackMode parseGlobalStackMode(String value, GlobalStackMode fallback) {
+        try {
+            return GlobalStackMode.valueOf(value);
+        } catch (RuntimeException exception) {
+            return fallback == null ? GlobalStackMode.FIXED : fallback;
+        }
+    }
+
     public static final class AdminEventData {
         public static final BuilderCodec<AdminEventData> CODEC = BuilderCodec.builder(AdminEventData.class, AdminEventData::new)
                 .append(new KeyedCodec<>("Action", Codec.STRING), (data, value) -> data.action = value, data -> data.action).add()
                 .append(new KeyedCodec<>("@SearchQuery", Codec.STRING), (data, value) -> data.searchQuery = value, data -> data.searchQuery).add()
                 .append(new KeyedCodec<>("@Enabled", Codec.BOOLEAN), (data, value) -> data.enabled = value, data -> data.enabled).add()
                 .append(new KeyedCodec<>("@GlobalLimitEnabled", Codec.BOOLEAN), (data, value) -> data.globalLimitEnabled = value, data -> data.globalLimitEnabled).add()
+                .append(new KeyedCodec<>("@GlobalStackMode", Codec.STRING), (data, value) -> data.globalStackMode = value, data -> data.globalStackMode).add()
                 .append(new KeyedCodec<>("@GlobalStackLimit", Codec.INTEGER), (data, value) -> data.globalStackLimit = value, data -> data.globalStackLimit).add()
+                .append(new KeyedCodec<>("@GlobalStackMultiplier", Codec.DOUBLE), (data, value) -> data.globalStackMultiplier = value, data -> data.globalStackMultiplier).add()
+                .append(new KeyedCodec<>("@GlobalStackCap", Codec.INTEGER), (data, value) -> data.globalStackCap = value, data -> data.globalStackCap).add()
                 .append(new KeyedCodec<>("@SafeMode", Codec.BOOLEAN), (data, value) -> data.safeMode = value, data -> data.safeMode).add()
                 .append(new KeyedCodec<>("@AllowDecreases", Codec.BOOLEAN), (data, value) -> data.allowDecreases = value, data -> data.allowDecreases).add()
                 .append(new KeyedCodec<>("@AllowRuntimeDecreases", Codec.BOOLEAN), (data, value) -> data.allowRuntimeDecreases = value, data -> data.allowRuntimeDecreases).add()
@@ -641,7 +710,10 @@ public final class StackWiseAdminPage extends InteractiveCustomUIPage<StackWiseA
         public String searchQuery = "";
         public boolean enabled;
         public boolean globalLimitEnabled;
+        public String globalStackMode = GlobalStackMode.FIXED.name();
         public int globalStackLimit;
+        public double globalStackMultiplier;
+        public int globalStackCap;
         public boolean safeMode;
         public boolean allowDecreases;
         public boolean allowRuntimeDecreases;

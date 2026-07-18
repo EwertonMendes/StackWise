@@ -19,6 +19,7 @@ import tblack.stackwise.migration.RuleMigrationResult;
 import tblack.stackwise.migration.RuleMigrationService;
 import tblack.stackwise.permissions.PermissionService;
 import tblack.stackwise.stack.ReflectionItemStackLimitAdapter;
+import tblack.stackwise.stack.RuntimeItemAssetSync;
 import tblack.stackwise.stack.StackApplyReport;
 import tblack.stackwise.stack.StackApplyService;
 
@@ -35,6 +36,7 @@ public final class StackWisePlugin extends JavaPlugin {
     private final PermissionService permissionService = new PermissionService();
     private final OperationLogService operationLogService = new OperationLogService();
     private final ItemIconCatalog itemIconCatalog = new HytaleItemIconCatalog();
+    private final RuntimeItemAssetSync runtimeItemAssetSync = new RuntimeItemAssetSync();
     private StackWiseConfig config;
     private StackApplyService applyService;
 
@@ -104,7 +106,7 @@ public final class StackWisePlugin extends JavaPlugin {
         } else {
             config = result.config();
             refreshPermissions();
-            StackApplyReport report = applyService.applyRuntime(config);
+            StackApplyReport report = applyRuntimeAndSync(config);
             operation = OperationResult.success(
                     "messages.reload_success",
                     result.validation(),
@@ -133,7 +135,7 @@ public final class StackWisePlugin extends JavaPlugin {
         } else {
             config = result.config();
             refreshPermissions();
-            StackApplyReport report = applyService.applyRuntime(config);
+            StackApplyReport report = applyRuntimeAndSync(config);
             operation = OperationResult.success(
                     "messages.save_success",
                     result.validation(),
@@ -189,7 +191,7 @@ public final class StackWisePlugin extends JavaPlugin {
 
         config = saved.config();
         refreshPermissions();
-        StackApplyReport report = applyService.applyRuntime(config);
+        StackApplyReport report = applyRuntimeAndSync(config);
         OperationResult operation = OperationResult.success(
                 migration.messageKey(),
                 saved.validation(),
@@ -224,6 +226,28 @@ public final class StackWisePlugin extends JavaPlugin {
         permissionService.clearCache();
         permissionService.register(config.commands.adminPermission);
         permissionService.register("stackwise.admin");
+    }
+
+    private StackApplyReport applyRuntimeAndSync(StackWiseConfig activeConfig) {
+        StackApplyReport report = applyService.applyRuntime(activeConfig);
+        if (report.changedItemIds().isEmpty()) return report;
+        try {
+            report.clientSynced = runtimeItemAssetSync.synchronize(report.changedItemIds());
+            if (report.clientSynced > 0) {
+                LOGGER.atInfo().log(
+                        "Synchronized %s runtime item stack limit updates with connected clients using %s",
+                        report.clientSynced,
+                        runtimeItemAssetSync.description()
+                );
+            }
+        } catch (ReflectiveOperationException | RuntimeException exception) {
+            report.clientSyncFailures++;
+            report.failures++;
+            LOGGER.atSevere().withCause(exception).log(
+                    "StackWise changed server item limits but could not synchronize them with connected clients"
+            );
+        }
+        return report;
     }
 
     private void onItemAssetsLoaded(@Nonnull LoadedAssetsEvent<String, Item, DefaultAssetMap<String, Item>> event) {

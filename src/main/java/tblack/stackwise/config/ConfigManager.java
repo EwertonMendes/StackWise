@@ -2,7 +2,10 @@ package tblack.stackwise.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 import tblack.stackwise.rule.MatchType;
 import tblack.stackwise.rule.RuleAction;
 import tblack.stackwise.rule.StackRule;
@@ -100,8 +103,14 @@ public final class ConfigManager {
         String json = null;
         try {
             json = Files.readString(configFile, StandardCharsets.UTF_8);
-            StackWiseConfig parsed = gson.fromJson(json, StackWiseConfig.class);
+            JsonElement root = JsonParser.parseString(json);
+            if (!root.isJsonObject()) throw new JsonParseException("Configuration root must be an object");
+            JsonObject object = root.getAsJsonObject();
+            int sourceVersion = sourceVersion(object);
+            requireGlobalStackMode(object, sourceVersion);
+            StackWiseConfig parsed = gson.fromJson(object, StackWiseConfig.class);
             if (parsed == null) throw new JsonParseException("Configuration is empty");
+            boolean upgraded = upgradeSchema(parsed, sourceVersion);
             StackWiseConfig normalized = normalize(parsed);
             ValidationResult validation = validator.validate(normalized);
             if (!validation.isValid()) {
@@ -109,6 +118,7 @@ public final class ConfigManager {
                 current = previous;
                 return ConfigOperationResult.failure(copy(previous), validation, validation.firstError());
             }
+            if (upgraded) backupOriginal(json, "config.before-v2");
             write(normalized);
             current = normalized;
             return ConfigOperationResult.success(copy(normalized), validation, "Configuration loaded");
@@ -151,6 +161,39 @@ public final class ConfigManager {
         return config;
     }
 
+    private int sourceVersion(JsonObject object) {
+        JsonElement value = object.get("configVersion");
+        if (value == null || value.isJsonNull()) return 1;
+        try {
+            int version = value.getAsInt();
+            return version <= 0 ? 1 : version;
+        } catch (RuntimeException exception) {
+            throw new JsonParseException("configVersion must be an integer", exception);
+        }
+    }
+
+    private boolean upgradeSchema(StackWiseConfig config, int sourceVersion) {
+        if (sourceVersion != 1) return false;
+        config.configVersion = StackWiseConfig.CURRENT_CONFIG_VERSION;
+        config.globalStackMode = GlobalStackMode.FIXED;
+        config.globalStackMultiplier = 2.0D;
+        config.globalStackCap = 999;
+        return true;
+    }
+
+    private void requireGlobalStackMode(JsonObject object, int sourceVersion) {
+        if (sourceVersion < StackWiseConfig.CURRENT_CONFIG_VERSION) return;
+        JsonElement value = object.get("globalStackMode");
+        if (value == null || value.isJsonNull()) {
+            throw new JsonParseException("globalStackMode is required");
+        }
+        try {
+            GlobalStackMode.valueOf(value.getAsString());
+        } catch (RuntimeException exception) {
+            throw new JsonParseException("Unsupported globalStackMode: " + value, exception);
+        }
+    }
+
     private String normalizeOptionalItemId(String value) {
         if (value == null) return null;
         String normalized = value.replaceAll("\\p{Cntrl}", "").trim();
@@ -179,6 +222,16 @@ public final class ConfigManager {
         String timestamp = Long.toString(Instant.now().toEpochMilli());
         Path backup = modDirectory.resolve(backupName + "." + timestamp + ".json");
         Files.copy(configFile, backup);
+    }
+
+    private void backupOriginal(String content, String backupName) throws IOException {
+        Files.createDirectories(modDirectory);
+        String timestamp = Long.toString(Instant.now().toEpochMilli());
+        Files.writeString(
+                modDirectory.resolve(backupName + "." + timestamp + ".json"),
+                content,
+                StandardCharsets.UTF_8
+        );
     }
 
     private void backupInvalid(String content) {

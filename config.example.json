@@ -1,8 +1,11 @@
 {
-  "configVersion": 1,
+  "configVersion": 2,
   "enabled": true,
   "globalLimitEnabled": true,
+  "globalStackMode": "FIXED",
   "globalStackLimit": 1000,
+  "globalStackMultiplier": 2.0,
+  "globalStackCap": 999,
   "safeMode": true,
   "allowDecreases": false,
   "allowRuntimeDecreases": false,

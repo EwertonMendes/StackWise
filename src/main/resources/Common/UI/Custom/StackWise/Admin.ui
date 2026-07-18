@@ -31,7 +31,7 @@ $Common.@PageOverlay {
       }
 
       Group #StatusGroup {
-        Anchor: (Height: 44, Bottom: 6);
+        Anchor: (Height: 64, Bottom: 6);
         LayoutMode: Full;
         Visible: false;
 
@@ -516,49 +516,141 @@ $Common.@PageOverlay {
             Text: "Global settings";
           }
 
-          Group {
-            Anchor: (Height: 158, Bottom: 12);
-            LayoutMode: Left;
+          Group #BehaviorSettingsCard {
+            Anchor: (Height: 204, Bottom: 14);
+            LayoutMode: Top;
+            Padding: (Top: 12, Bottom: 12, Left: 14, Right: 14);
+            Background: #17283a(0.86);
+            OutlineColor: #3e5872(0.84);
+            OutlineSize: 1;
 
-            Group {
-              FlexWeight: 1;
-              Anchor: (Right: 22);
-              LayoutMode: Top;
-
-              Group { Anchor: (Height: 34, Bottom: 2); LayoutMode: Left; $Common.@CheckBox #EnabledCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #EnabledLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Enable StackWise"; } }
-              Label #EnabledHintLabel { Style: (...$Common.@DefaultLabelStyle, FontSize: 13, Wrap: true, TextColor: #8398ad); Padding: (Left: 32, Right: 8); Anchor: (Height: 42, Bottom: 4); Text: "Disabling may require a restart."; }
-              Group { Anchor: (Height: 34, Bottom: 4); LayoutMode: Left; $Common.@CheckBox #SafeModeCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #SafeModeLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Safe mode for non-stackable items"; } }
-              Group { Anchor: (Height: 34); LayoutMode: Left; $Common.@CheckBox #RespectExternalChangesCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #RespectExternalChangesLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Respect stack changes made by other mods"; } }
+            Label #BehaviorSettingsLabel {
+              Style: (...$Common.@DefaultLabelStyle, RenderBold: true, TextColor: #b7cedd);
+              Anchor: (Height: 26, Bottom: 8);
+              Text: "Behavior and compatibility";
             }
 
             Group {
               FlexWeight: 1;
-              LayoutMode: Top;
+              LayoutMode: Left;
 
-              Group { Anchor: (Height: 34, Bottom: 4); LayoutMode: Left; $Common.@CheckBox #AllowDecreasesCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #AllowDecreasesLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Allow limits below the original value"; } }
-              Group { Anchor: (Height: 34, Bottom: 4); LayoutMode: Left; $Common.@CheckBox #AllowRuntimeDecreasesCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #AllowRuntimeDecreasesLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Allow live decreases without restart"; } }
-              Group { Anchor: (Height: 34); LayoutMode: Left; $Common.@CheckBox #RestoreUnmatchedCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #RestoreUnmatchedLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Restore items no longer matched by rules"; } }
+              Group {
+                FlexWeight: 1;
+                Anchor: (Right: 22);
+                LayoutMode: Top;
+
+                Group { Anchor: (Height: 34, Bottom: 2); LayoutMode: Left; $Common.@CheckBox #EnabledCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #EnabledLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Enable StackWise"; } }
+                Label #EnabledHintLabel { Style: (...$Common.@DefaultLabelStyle, FontSize: 13, Wrap: true, TextColor: #8398ad); Padding: (Left: 32, Right: 8); Anchor: (Height: 42, Bottom: 4); Text: "Disabling may require a restart."; }
+                Group { Anchor: (Height: 34, Bottom: 4); LayoutMode: Left; $Common.@CheckBox #SafeModeCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #SafeModeLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Safe mode for non-stackable items"; } }
+                Group { Anchor: (Height: 34); LayoutMode: Left; $Common.@CheckBox #RespectExternalChangesCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #RespectExternalChangesLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Respect stack changes made by other mods"; } }
+              }
+
+              Group {
+                FlexWeight: 1;
+                LayoutMode: Top;
+
+                Group { Anchor: (Height: 34, Bottom: 4); LayoutMode: Left; $Common.@CheckBox #AllowDecreasesCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #AllowDecreasesLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Allow limits below the original value"; } }
+                Group { Anchor: (Height: 34, Bottom: 4); LayoutMode: Left; $Common.@CheckBox #AllowRuntimeDecreasesCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #AllowRuntimeDecreasesLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Allow live decreases without restart"; } }
+                Group { Anchor: (Height: 34); LayoutMode: Left; $Common.@CheckBox #RestoreUnmatchedCheck { Anchor: (Width: 22, Height: 22, Right: 10); } Label #RestoreUnmatchedLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 28); Text: "Restore items no longer matched by rules"; } }
+              }
             }
           }
 
-          Group {
-            Anchor: (Height: 52, Bottom: 10);
-            LayoutMode: Left;
-            $Common.@CheckBox #GlobalLimitEnabledCheck { Anchor: (Width: 22, Height: 22, Right: 10); }
-            Label #GlobalLimitEnabledLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); Anchor: (Width: 285, Height: 38, Right: 14); Text: "Enable global stack limit"; }
-            Label #GlobalStackLimitLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); Anchor: (Width: 190, Height: 38, Right: 12); Text: "Global stack limit"; }
-            $Common.@NumberField #GlobalStackLimitInput { Anchor: (Width: 180, Height: 38); Format: (MaxDecimalPlaces: 0, Step: 1, MinValue: 1, MaxValue: 999999); }
+          Group #GlobalLimitSettingsCard {
+            Anchor: (Height: 412, Bottom: 14);
+            LayoutMode: Top;
+            Padding: (Top: 12, Bottom: 12, Left: 14, Right: 14);
+            Background: #17283a(0.86);
+            OutlineColor: #3e5872(0.84);
+            OutlineSize: 1;
+
+            Label #GlobalLimitSettingsLabel {
+              Style: (...$Common.@DefaultLabelStyle, RenderBold: true, TextColor: #b7cedd);
+              Anchor: (Height: 26, Bottom: 8);
+              Text: "Global limit";
+            }
+
+            Group #GlobalLimitEnabledRow {
+              Anchor: (Height: 38, Bottom: 10);
+              LayoutMode: Left;
+              $Common.@CheckBox #GlobalLimitEnabledCheck { Anchor: (Width: 22, Height: 22, Right: 10); }
+              Label #GlobalLimitEnabledLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); FlexWeight: 1; Anchor: (Height: 30); Text: "Enable global stack limit"; }
+            }
+
+            Group #GlobalModeRow {
+              Anchor: (Height: 92, Bottom: 12);
+              LayoutMode: Full;
+
+              Label #GlobalStackModeLabel {
+                Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center);
+                Anchor: (Top: 0, Left: 0, Width: 238, Height: 38);
+                Text: "Global stack mode";
+              }
+
+              Group #GlobalModeControl {
+                Anchor: (Top: 0, Left: 256, Right: 0, Height: 92);
+                LayoutMode: Full;
+
+                $Common.@DropdownBox #GlobalStackModeDropdown {
+                  Anchor: (Top: 0, Left: 0, Width: 420, Height: 38);
+                  Style: (...$Common.@DefaultDropdownBoxStyle, PanelAlign: Bottom, PanelWidth: 420);
+                }
+                Label #GlobalStackModeHintLabel {
+                  Style: (...$Common.@DefaultLabelStyle, FontSize: 13, Wrap: true, TextColor: #8398ad);
+                  Anchor: (Top: 45, Left: 0, Width: 420, Height: 44);
+                  Text: "Uses one fixed value for every stackable item.";
+                }
+              }
+            }
+
+            Group #ModeValuesRow {
+              Anchor: (Height: 146, Bottom: 10);
+              LayoutMode: Full;
+
+              Group #FixedModeCard {
+                Anchor: (Full: 0);
+                LayoutMode: Top;
+                Padding: (Top: 10, Bottom: 10, Left: 14, Right: 14);
+                Background: #102033(0.92);
+                OutlineColor: #344c65(0.9);
+                OutlineSize: 1;
+
+                Label #FixedModeCardLabel { Style: (...$Common.@DefaultLabelStyle, FontSize: 13, RenderBold: true, RenderUppercase: true, TextColor: #b7cedd); Anchor: (Height: 24, Bottom: 10); Text: "Fixed value"; }
+                Group { Anchor: (Height: 42); LayoutMode: Left; Label #GlobalStackLimitLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); Anchor: (Width: 238, Height: 38, Right: 18); Text: "Global stack limit"; } $Common.@NumberField #GlobalStackLimitInput { Anchor: (Width: 180, Height: 38); Format: (MaxDecimalPlaces: 0, Step: 1, MinValue: 1, MaxValue: 999999); } }
+              }
+
+              Group #MultiplierModeCard {
+                Anchor: (Full: 0);
+                LayoutMode: Top;
+                Padding: (Top: 10, Bottom: 10, Left: 14, Right: 14);
+                Background: #102033(0.92);
+                OutlineColor: #344c65(0.9);
+                OutlineSize: 1;
+                Visible: false;
+
+                Label #MultiplierModeCardLabel { Style: (...$Common.@DefaultLabelStyle, FontSize: 13, RenderBold: true, RenderUppercase: true, TextColor: #b7cedd); Anchor: (Height: 24, Bottom: 6); Text: "Multiply original"; }
+                Group { Anchor: (Height: 42, Bottom: 6); LayoutMode: Left; Label #GlobalStackMultiplierLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); Anchor: (Width: 238, Height: 38, Right: 18); Text: "Multiplier"; } $Common.@NumberField #GlobalStackMultiplierInput { Anchor: (Width: 180, Height: 38); Format: (MaxDecimalPlaces: 2, Step: 0.1, MinValue: 1, MaxValue: 999999); } }
+                Group { Anchor: (Height: 42); LayoutMode: Left; Label #GlobalStackCapLabel { Style: (...$Common.@DefaultLabelStyle, VerticalAlignment: Center); Anchor: (Width: 238, Height: 38, Right: 18); Text: "Cap"; } $Common.@NumberField #GlobalStackCapInput { Anchor: (Width: 180, Height: 38); Format: (MaxDecimalPlaces: 0, Step: 1, MinValue: 1, MaxValue: 999999); } }
+              }
+            }
+
+            Label #LiveApplyHintLabel {
+              Style: (...$Common.@DefaultLabelStyle, FontSize: 13, Wrap: true, VerticalAlignment: Center, TextColor: #e9b65f);
+              Anchor: (Height: 42);
+              Text: "Saving applies changes immediately. Reductions need live decreases enabled or a server restart.";
+            }
           }
 
-          $Common.@TextButton #SaveGeneralButton { @Text = "Save settings"; Anchor: (Width: 240, Height: 44); }
+        }
+
+        Group #SettingsFooter {
+          Anchor: (Height: 54, Top: 8);
+          LayoutMode: Center;
+          $Common.@TextButton #SaveGeneralButton { @Text = "Save settings"; Anchor: (Width: 280, Height: 44); }
         }
       }
-
-      Group {
-        Anchor: (Height: 46, Top: 8);
-        LayoutMode: Right;
-        $Common.@CancelTextButton #ClosePageButton { @Text = "Close"; Anchor: (Width: 150, Height: 42); }
-      }
     }
+
+    $Common.@CloseButton #ClosePageButton { Anchor: (Top: -10, Right: -10, Width: 32, Height: 32); }
   }
 }

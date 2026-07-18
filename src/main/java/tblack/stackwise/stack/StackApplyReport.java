@@ -2,7 +2,9 @@ package tblack.stackwise.stack;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class StackApplyReport {
     public int scanned;
@@ -14,10 +16,17 @@ public final class StackApplyReport {
     public int decreaseBlocked;
     public int restartRequired;
     public int externalConflict;
+    public int clientSynced;
+    public int clientSyncFailures;
     public int failures;
     public boolean adapterAvailable;
     public String adapterDescription = "";
     private final List<StackChange> changes = new ArrayList<>();
+    private final Set<String> changedItemIds = new LinkedHashSet<>();
+
+    public void recordChangedItem(String itemId) {
+        if (itemId != null && !itemId.isBlank()) changedItemIds.add(itemId);
+    }
 
     public void addChange(StackChange change) {
         if (changes.size() < 1000) {
@@ -49,6 +58,10 @@ public final class StackApplyReport {
 
     public List<StackChange> changes() {
         return Collections.unmodifiableList(changes);
+    }
+
+    public Set<String> changedItemIds() {
+        return Collections.unmodifiableSet(changedItemIds);
     }
 
     public String summary() {

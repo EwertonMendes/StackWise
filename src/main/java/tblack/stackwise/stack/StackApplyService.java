@@ -17,6 +17,7 @@ public final class StackApplyService {
     private final ItemStackLimitAdapter adapter;
     private final RuleCompiler compiler = new RuleCompiler();
     private final ItemSafetyClassifier safetyClassifier = new ItemSafetyClassifier();
+    private final GlobalStackTargetResolver globalTargetResolver = new GlobalStackTargetResolver();
     private final Map<String, ItemState> states = new LinkedHashMap<>();
     private Map<String, Object> currentAssets = Map.of();
     private Map<String, Integer> lastMatchCounts = Map.of();
@@ -138,7 +139,7 @@ public final class StackApplyService {
                         item,
                         state,
                         current,
-                        config.globalStackLimit,
+                        globalTargetResolver.resolve(config, state.baseline),
                         GLOBAL_SOURCE,
                         false,
                         config,
@@ -299,6 +300,7 @@ public final class StackApplyService {
             return;
         }
         report.changed++;
+        report.recordChangedItem(itemId);
         report.addChange(new StackChange(itemId, state.baseline, current, state.baseline, applied, ruleId, "changed"));
         state.release();
     }
@@ -333,6 +335,7 @@ public final class StackApplyService {
             return;
         }
         report.changed++;
+        report.recordChangedItem(itemId);
         state.claim(applied, source);
         report.addChange(new StackChange(itemId, state.baseline, current, requested, applied, source, "changed"));
     }

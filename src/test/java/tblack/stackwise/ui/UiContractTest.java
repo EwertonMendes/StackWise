@@ -38,6 +38,11 @@ class UiContractTest {
                 "StatusGroup",
                 "ViewLogButton",
                 "GlobalSettingsLabel",
+                "BehaviorSettingsCard",
+                "BehaviorSettingsLabel",
+                "GlobalLimitSettingsCard",
+                "GlobalLimitSettingsLabel",
+                "GlobalLimitEnabledRow",
                 "EnabledCheck",
                 "EnabledLabel",
                 "EnabledHintLabel",
@@ -53,12 +58,27 @@ class UiContractTest {
                 "RestoreUnmatchedLabel",
                 "GlobalLimitEnabledCheck",
                 "GlobalLimitEnabledLabel",
+                "GlobalStackModeLabel",
+                "GlobalStackModeDropdown",
+                "GlobalStackModeHintLabel",
+                "GlobalModeControl",
+                "FixedModeCard",
+                "FixedModeCardLabel",
+                "MultiplierModeCard",
+                "MultiplierModeCardLabel",
+                "LiveApplyHintLabel",
+                "GlobalStackLimitLabel",
                 "GlobalStackLimitInput",
+                "GlobalStackMultiplierLabel",
+                "GlobalStackMultiplierInput",
+                "GlobalStackCapLabel",
+                "GlobalStackCapInput",
                 "SearchField",
                 "SearchButton",
                 "ClearSearchButton",
                 "NewRuleButton",
                 "ReloadButton",
+                "SettingsFooter",
                 "SaveGeneralButton",
                 "PageLabel",
                 "PreviousButton",
@@ -157,12 +177,74 @@ class UiContractTest {
     void stackLimitInputsUseTheSupportedHardMaximum() throws IOException {
         String admin = Files.readString(DIRECTORY.resolve("Admin.ui"));
         String editor = Files.readString(DIRECTORY.resolve("RuleEditor.ui"));
+        String source = Files.readString(Path.of(
+                "src", "main", "java", "tblack", "stackwise", "ui", "StackWiseAdminPage.java"
+        ));
 
         assertTrue(admin.contains("#GlobalStackLimitInput"));
+        assertTrue(admin.contains("#GlobalStackMultiplierInput"));
+        assertTrue(admin.contains("#GlobalStackCapInput"));
+        assertTrue(admin.contains("MaxDecimalPlaces: 2, Step: 0.1"));
         assertTrue(admin.contains("MaxValue: 999999"));
         assertTrue(editor.contains("#MaxStackInput"));
         assertTrue(editor.contains("MaxValue: 999999"));
+        assertTrue(source.contains("new KeyedCodec<>(\"@GlobalStackMode\", Codec.STRING)"));
+        assertTrue(source.contains("new KeyedCodec<>(\"@GlobalStackMultiplier\", Codec.DOUBLE)"));
+        assertTrue(source.contains("new KeyedCodec<>(\"@GlobalStackCap\", Codec.INTEGER)"));
         assertFalse(admin.contains("#MaximumStackInput"));
+    }
+
+    @Test
+    void globalModePreviewUsesValueChangedAndModeSpecificHints() throws IOException {
+        String document = Files.readString(DIRECTORY.resolve("Admin.ui"));
+        String source = Files.readString(Path.of(
+                "src", "main", "java", "tblack", "stackwise", "ui", "StackWiseAdminPage.java"
+        ));
+
+        assertTrue(source.contains("CustomUIEventBindingType.ValueChanged"));
+        assertTrue(source.contains("case \"global-mode-changed\""));
+        assertTrue(source.contains("renderGlobalModeDetails(commands, mode)"));
+        assertTrue(source.contains("ui.admin.global_stack_mode_fixed_hint"));
+        assertTrue(source.contains("ui.admin.global_stack_mode_multiplier_hint"));
+        assertTrue(source.contains("commands.set(\"#FixedModeCard.Visible\", fixed)"));
+        assertTrue(source.contains("commands.set(\"#MultiplierModeCard.Visible\", !fixed)"));
+        assertTrue(document.contains("PanelAlign: Bottom"));
+        assertTrue(block(document, "Group #GlobalModeControl").contains("#GlobalStackModeHintLabel"));
+        assertTrue(block(document, "Group #GlobalModeRow").contains("LayoutMode: Full"));
+        assertTrue(block(document, "Label #GlobalStackModeLabel").contains("Top: 0, Left: 0"));
+        assertTrue(block(document, "$Common.@DropdownBox #GlobalStackModeDropdown").contains("Top: 0, Left: 0"));
+        assertTrue(block(document, "Label #GlobalStackModeHintLabel").contains("Top: 45, Left: 0, Width: 420"));
+        assertFalse(block(document, "Label #GlobalStackModeHintLabel").contains("Padding: (Left:"));
+    }
+
+    @Test
+    void globalModeUsesOneFullWidthCardAndMultiplierFieldsAreStacked() throws IOException {
+        String document = Files.readString(DIRECTORY.resolve("Admin.ui"));
+        String values = block(document, "Group #ModeValuesRow");
+        String fixed = block(document, "Group #FixedModeCard");
+        String multiplier = block(document, "Group #MultiplierModeCard");
+
+        assertTrue(values.contains("LayoutMode: Full"));
+        assertTrue(fixed.contains("Anchor: (Full: 0)"));
+        assertTrue(multiplier.contains("Anchor: (Full: 0)"));
+        assertTrue(multiplier.contains("Visible: false"));
+        assertEquals(2, count(multiplier, "Group { Anchor: (Height: 42"));
+        assertFalse(document.contains("FixedModeActiveIndicator"));
+        assertFalse(document.contains("MultiplierModeActiveIndicator"));
+    }
+
+    @Test
+    void settingsSaveIsFixedInFooterAndCloseUsesNativeCornerButton() throws IOException {
+        String document = Files.readString(DIRECTORY.resolve("Admin.ui"));
+        String settingsScroll = block(document, "Group #SettingsScroll");
+        String settingsTab = block(document, "Group #SettingsTabContent");
+        String closeButton = block(document, "$Common.@CloseButton #ClosePageButton");
+
+        assertFalse(settingsScroll.contains("#SaveGeneralButton"));
+        assertTrue(settingsTab.contains("Group #SettingsFooter"));
+        assertTrue(settingsTab.contains("#SaveGeneralButton"));
+        assertTrue(closeButton.contains("Top: -10, Right: -10"));
+        assertFalse(document.contains("@CancelTextButton #ClosePageButton"));
     }
 
     @Test
@@ -359,6 +441,16 @@ class UiContractTest {
         int total = 0;
         for (int index = 0; index < value.length(); index++) {
             if (value.charAt(index) == character) total++;
+        }
+        return total;
+    }
+
+    private int count(String value, String token) {
+        int total = 0;
+        int position = 0;
+        while ((position = value.indexOf(token, position)) >= 0) {
+            total++;
+            position += token.length();
         }
         return total;
     }

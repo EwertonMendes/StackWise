@@ -7,7 +7,7 @@ StackWise is a server-side Hytale mod for safe, deterministic, and configurable 
 - Exact item id, prefix, suffix, glob, and regular-expression matching
 - Deterministic rule priority and specificity
 - `SET` and `EXCLUDE` actions
-- Editable global stack limit, enabled by default at `1000`
+- Fixed or baseline-relative global stack limits, with an optional multiplier cap
 - Safe mode for originally non-stackable items
 - Protection against live decreases and external mod conflicts
 - Restoration when StackWise is disabled or an item stops matching
@@ -27,7 +27,7 @@ StackWise is a server-side Hytale mod for safe, deterministic, and configurable 
 ## Installation
 
 1. Run `./gradlew clean build`.
-2. Copy `build/libs/StackWise-1.1.0.jar` to the server `mods` directory.
+2. Copy `build/libs/StackWise-1.2.0.jar` to the server `mods` directory.
 3. Remove older StackWise JARs.
 4. Start the server.
 5. Edit `mods/Tblack_StackWise/config.json` or open `/stackwise` in game.
@@ -49,19 +49,31 @@ The default alias is `/sw`. The default administration permission is `stackwise.
 
 ## Configuration
 
-The generated schema starts at `configVersion: 1`. The public JSON contains behavior settings and optional administration metadata. Validation limits are internal constants:
+The current schema is `configVersion: 2`. The public JSON contains behavior settings and optional administration metadata. Validation limits are internal constants:
 
 - Minimum configurable stack: `1`
 - Maximum configurable stack: `999999`
+- Multiplier range: `1.0` through `999999.0`
 - Default global stack limit: `1000`
 
 `globalStackLimit` remains editable. Values outside the supported range are rejected before the active configuration is replaced.
 
 A complete example is available in `config.example.json`. Each rule may optionally store an `iconItemId`; this affects only the administration interface and never changes rule matching.
 
-### Global limit
+### Global modes
 
-When `globalLimitEnabled` is true, every otherwise-unmatched item that was originally stackable receives `globalStackLimit`. Specific rules take precedence. `EXCLUDE` restores or preserves the baseline limit for matching items. Originally non-stackable items are not changed by the global fallback.
+When `globalLimitEnabled` is true, the selected global mode applies to otherwise-unmatched items that were originally stackable:
+
+- `FIXED` assigns `globalStackLimit`, preserving the behavior from StackWise 1.1.
+- `MULTIPLIER` assigns `min(globalStackCap, floor(baseline * globalStackMultiplier))`.
+
+The baseline is the effective stack limit captured when Hytale loads the item asset, so it can include asset-pack or mod changes that happened before StackWise processed the asset. Specific rules take precedence over both modes. `SET` rules are absolute and are not restricted by `globalStackCap`; `EXCLUDE` restores or preserves the baseline. Originally non-stackable items are not changed by the global fallback.
+
+For example, with a multiplier of `2.0` and a cap of `999`, baseline limits of `99` and `10` become `198` and `20`. A calculated value above `999` becomes `999`. If the cap would reduce an item below its baseline, the existing `allowDecreases` safeguard still applies.
+
+### Configuration upgrade
+
+StackWise automatically migrates `configVersion: 1` files to version 2. The migration keeps the existing fixed global limit and every rule and safety option unchanged, adds the multiplier settings with safe defaults, and creates `config.before-v2.<timestamp>.json` before rewriting `config.json`. To downgrade to StackWise 1.1, restore that backup first; older versions intentionally reject the version 2 schema.
 
 ### Rule precedence
 
@@ -82,6 +94,10 @@ Specificity order: `EXACT`, `PREFIX`, `SUFFIX`, `GLOB`, `REGEX`.
 - `respectExternalChanges` prevents StackWise from overwriting a value changed later by another mod or server component.
 
 When `enabled` becomes false, StackWise immediately attempts to restore only values it owns. This shutdown restoration is not blocked by `allowRuntimeDecreases`. Existing oversized inventory stacks, asset reload order, or values controlled by another mod can still require a server restart to fully normalize. The administration interface shows this warning below the enable checkbox.
+
+Saving or reloading applies every permitted change immediately. If a new configuration would lower an active limit while `allowRuntimeDecreases` is disabled, StackWise keeps the current runtime value, reports how many limits are pending, and applies those reductions after the next server restart.
+
+After a runtime change, StackWise republishes the changed item assets through Hytale's update path. This keeps connected clients synchronized for live increases such as multiplier `4` to `5` or multiplier mode to a higher fixed limit, and refreshes the initialization cache used by players who connect later.
 
 ## Overstacked migration
 

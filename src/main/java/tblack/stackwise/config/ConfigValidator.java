@@ -25,7 +25,12 @@ public final class ConfigValidator {
         if (config.configVersion != StackWiseConfig.CURRENT_CONFIG_VERSION) {
             result.addError("configVersion", "validation.config_version_unsupported", StackWiseConfig.CURRENT_CONFIG_VERSION);
         }
+        if (config.globalStackMode == null) {
+            result.addError("globalStackMode", "validation.global_stack_mode_required");
+        }
         validateStackLimit("globalStackLimit", config.globalStackLimit, result);
+        validateStackMultiplier("globalStackMultiplier", config.globalStackMultiplier, result);
+        validateStackLimit("globalStackCap", config.globalStackCap, result);
         if (config.commands == null) result.addError("commands", "validation.section_missing");
         if (config.commands != null) {
             if (blank(config.commands.primary)) result.addError("commands.primary", "validation.command_required");
@@ -79,6 +84,19 @@ public final class ConfigValidator {
         }
         if (value > StackWiseConfig.MAX_STACK_LIMIT) {
             result.addError(path, "validation.maximum_not_above", StackWiseConfig.MAX_STACK_LIMIT);
+        }
+    }
+
+    private void validateStackMultiplier(String path, double value, ValidationResult result) {
+        if (!Double.isFinite(value)
+                || value < StackWiseConfig.MIN_STACK_MULTIPLIER
+                || value > StackWiseConfig.MAX_STACK_MULTIPLIER) {
+            result.addError(
+                    path,
+                    "validation.multiplier_range",
+                    StackWiseConfig.MIN_STACK_MULTIPLIER,
+                    StackWiseConfig.MAX_STACK_MULTIPLIER
+            );
         }
     }
 

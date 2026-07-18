@@ -43,6 +43,14 @@ class ReflectionItemStackLimitAdapterTest {
         assertTrue(adapter.description().contains("invalidatePacketCache"));
     }
 
+    @Test
+    void runtimeAssetSyncFindsHytalesClientUpdatePath() {
+        RuntimeItemAssetSync sync = new RuntimeItemAssetSync();
+
+        assertTrue(sync.isAvailable());
+        assertTrue(sync.description().contains("handleRemoveOrUpdate"));
+    }
+
     private static class TestItem {
         private int maxStack = 1;
         private Object cachedPacket = new Object();

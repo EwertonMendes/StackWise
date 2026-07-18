@@ -100,7 +100,18 @@ class LocalizationTest {
         assertTrue(english.containsKey("stackwise.validation.invalid_regex"));
         assertTrue(english.containsKey("stackwise.ui.admin.search_placeholder"));
         assertTrue(english.containsKey("stackwise.ui.admin.global_limit_enabled"));
+        assertTrue(english.containsKey("stackwise.ui.admin.global_stack_mode"));
+        assertTrue(english.containsKey("stackwise.ui.admin.global_stack_mode_hint"));
         assertTrue(english.containsKey("stackwise.ui.admin.global_stack_limit"));
+        assertTrue(english.containsKey("stackwise.ui.admin.global_stack_multiplier"));
+        assertTrue(english.containsKey("stackwise.ui.admin.global_stack_cap"));
+        assertTrue(english.containsKey("stackwise.ui.global_mode.fixed"));
+        assertTrue(english.containsKey("stackwise.ui.global_mode.multiplier"));
+        assertTrue(english.containsKey("stackwise.messages.restart_required"));
+        assertTrue(english.containsKey("stackwise.ui.admin.global_stack_mode_fixed_hint"));
+        assertTrue(english.containsKey("stackwise.ui.admin.global_stack_mode_multiplier_hint"));
+        assertTrue(english.containsKey("stackwise.ui.admin.live_apply_hint"));
+        assertTrue(english.containsKey("stackwise.validation.multiplier_range"));
         assertTrue(english.containsKey("stackwise.ui.admin.enabled_hint"));
         assertTrue(english.containsKey("stackwise.ui.admin.delete_confirmation"));
         assertTrue(english.containsKey("stackwise.ui.admin.tab_rules"));

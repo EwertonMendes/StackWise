@@ -1,6 +1,7 @@
 package tblack.stackwise.stack;
 
 import org.junit.jupiter.api.Test;
+import tblack.stackwise.config.GlobalStackMode;
 import tblack.stackwise.config.StackWiseConfig;
 import tblack.stackwise.rule.MatchType;
 import tblack.stackwise.rule.RuleAction;
@@ -59,16 +60,93 @@ class StackApplyServiceTest {
     }
 
     @Test
+    void globalMultiplierUsesTheCapturedBaseline() {
+        TestItem item = new TestItem();
+        FakeAdapter adapter = new FakeAdapter(item, 99);
+        StackWiseConfig config = new StackWiseConfig();
+        config.rules = List.of();
+        config.globalStackMode = GlobalStackMode.MULTIPLIER;
+        config.globalStackMultiplier = 2.0D;
+        config.globalStackCap = 999;
+        StackApplyService service = new StackApplyService(adapter);
+
+        StackApplyReport report = service.onAssetsLoaded(Map.of("Ingredient_Stick", item), config);
+
+        assertEquals(198, adapter.value(item));
+        assertEquals(1, report.matched);
+        assertEquals(1, report.changed);
+    }
+
+    @Test
+    void globalMultiplierAppliesItsCap() {
+        TestItem item = new TestItem();
+        FakeAdapter adapter = new FakeAdapter(item, 100);
+        StackWiseConfig config = new StackWiseConfig();
+        config.rules = List.of();
+        config.globalStackMode = GlobalStackMode.MULTIPLIER;
+        config.globalStackMultiplier = 20.0D;
+        config.globalStackCap = 999;
+        StackApplyService service = new StackApplyService(adapter);
+
+        service.onAssetsLoaded(Map.of("Capped_Item", item), config);
+
+        assertEquals(999, adapter.value(item));
+    }
+
+    @Test
+    void capBelowBaselineStillUsesDecreaseSafeguards() {
+        TestItem item = new TestItem();
+        FakeAdapter adapter = new FakeAdapter(item, 100);
+        StackWiseConfig config = new StackWiseConfig();
+        config.rules = List.of();
+        config.globalStackMode = GlobalStackMode.MULTIPLIER;
+        config.globalStackMultiplier = 2.0D;
+        config.globalStackCap = 50;
+        StackApplyService service = new StackApplyService(adapter);
+
+        StackApplyReport blocked = service.onAssetsLoaded(Map.of("Test_Item", item), config);
+
+        assertEquals(100, adapter.value(item));
+        assertEquals(1, blocked.decreaseBlocked);
+
+        config.allowDecreases = true;
+        config.allowRuntimeDecreases = true;
+        StackApplyReport applied = service.applyRuntime(config);
+
+        assertEquals(50, adapter.value(item));
+        assertEquals(1, applied.changed);
+    }
+
+    @Test
     void explicitRulesOverrideTheGlobalLimit() {
         TestItem item = new TestItem();
         FakeAdapter adapter = new FakeAdapter(item, 64);
         StackWiseConfig config = new StackWiseConfig();
+        config.globalStackMode = GlobalStackMode.MULTIPLIER;
+        config.globalStackMultiplier = 2.0D;
+        config.globalStackCap = 999;
         config.rules = List.of(rule("specific", MatchType.EXACT, "Test_Item", 250, false));
         StackApplyService service = new StackApplyService(adapter);
 
         service.onAssetsLoaded(Map.of("Test_Item", item), config);
 
         assertEquals(250, adapter.value(item));
+    }
+
+    @Test
+    void explicitRulesMayExceedTheMultiplierCap() {
+        TestItem item = new TestItem();
+        FakeAdapter adapter = new FakeAdapter(item, 64);
+        StackWiseConfig config = new StackWiseConfig();
+        config.globalStackMode = GlobalStackMode.MULTIPLIER;
+        config.globalStackMultiplier = 2.0D;
+        config.globalStackCap = 999;
+        config.rules = List.of(rule("specific", MatchType.EXACT, "Test_Item", 1000, false));
+        StackApplyService service = new StackApplyService(adapter);
+
+        service.onAssetsLoaded(Map.of("Test_Item", item), config);
+
+        assertEquals(1000, adapter.value(item));
     }
 
     @Test
@@ -92,6 +170,8 @@ class StackApplyServiceTest {
         TestItem item = new TestItem();
         FakeAdapter adapter = new FakeAdapter(item, 1);
         StackWiseConfig config = new StackWiseConfig();
+        config.globalStackMode = GlobalStackMode.MULTIPLIER;
+        config.globalStackMultiplier = 2.0D;
         config.rules = List.of();
         StackApplyService service = new StackApplyService(adapter);
 
@@ -194,6 +274,95 @@ class StackApplyServiceTest {
 
         assertEquals(100, adapter.value(item));
         assertEquals(1, report.restartRequired);
+    }
+
+    @Test
+    void switchingFromFixedToMultiplierUsesTheRuntimeDecreaseSafeguard() {
+        TestItem item = new TestItem();
+        FakeAdapter adapter = new FakeAdapter(item, 64);
+        StackWiseConfig fixed = new StackWiseConfig();
+        fixed.rules = List.of();
+        StackApplyService service = new StackApplyService(adapter);
+        service.onAssetsLoaded(Map.of("Test_Item", item), fixed);
+
+        StackWiseConfig multiplied = new StackWiseConfig();
+        multiplied.rules = List.of();
+        multiplied.globalStackMode = GlobalStackMode.MULTIPLIER;
+        multiplied.globalStackMultiplier = 2.0D;
+        multiplied.globalStackCap = 999;
+        StackApplyReport blocked = service.applyRuntime(multiplied);
+
+        assertEquals(1000, adapter.value(item));
+        assertEquals(1, blocked.restartRequired);
+
+        multiplied.allowRuntimeDecreases = true;
+        StackApplyReport applied = service.applyRuntime(multiplied);
+
+        assertEquals(128, adapter.value(item));
+        assertEquals(1, applied.changed);
+    }
+
+    @Test
+    void increasingMultiplierAppliesImmediatelyWithoutRuntimeDecreasePermission() {
+        TestItem item = new TestItem();
+        FakeAdapter adapter = new FakeAdapter(item, 100);
+        StackWiseConfig multiplied = new StackWiseConfig();
+        multiplied.rules = List.of();
+        multiplied.globalStackMode = GlobalStackMode.MULTIPLIER;
+        multiplied.globalStackMultiplier = 4.0D;
+        multiplied.globalStackCap = 999;
+        StackApplyService service = new StackApplyService(adapter);
+        service.onAssetsLoaded(Map.of("Test_Item", item), multiplied);
+
+        multiplied.globalStackMultiplier = 5.0D;
+        StackApplyReport report = service.applyRuntime(multiplied);
+
+        assertEquals(500, adapter.value(item));
+        assertEquals(1, report.changed);
+        assertEquals(0, report.restartRequired);
+        assertEquals(1, report.changedItemIds().size());
+    }
+
+    @Test
+    void switchingFromMultiplierToHigherFixedValueAppliesImmediately() {
+        TestItem item = new TestItem();
+        FakeAdapter adapter = new FakeAdapter(item, 100);
+        StackWiseConfig multiplied = new StackWiseConfig();
+        multiplied.rules = List.of();
+        multiplied.globalStackMode = GlobalStackMode.MULTIPLIER;
+        multiplied.globalStackMultiplier = 4.0D;
+        multiplied.globalStackCap = 999;
+        StackApplyService service = new StackApplyService(adapter);
+        service.onAssetsLoaded(Map.of("Test_Item", item), multiplied);
+
+        StackWiseConfig fixed = new StackWiseConfig();
+        fixed.rules = List.of();
+        fixed.globalStackMode = GlobalStackMode.FIXED;
+        fixed.globalStackLimit = 1000;
+        StackApplyReport report = service.applyRuntime(fixed);
+
+        assertEquals(1000, adapter.value(item));
+        assertEquals(1, report.changed);
+        assertEquals(0, report.restartRequired);
+    }
+
+    @Test
+    void externalChangesReleaseMultiplierControlledItems() {
+        TestItem item = new TestItem();
+        FakeAdapter adapter = new FakeAdapter(item, 64);
+        StackWiseConfig config = new StackWiseConfig();
+        config.rules = List.of();
+        config.globalStackMode = GlobalStackMode.MULTIPLIER;
+        config.globalStackMultiplier = 2.0D;
+        StackApplyService service = new StackApplyService(adapter);
+        service.onAssetsLoaded(Map.of("Test_Item", item), config);
+        adapter.set(item, 80);
+
+        config.globalStackMultiplier = 3.0D;
+        StackApplyReport report = service.applyRuntime(config);
+
+        assertEquals(80, adapter.value(item));
+        assertEquals(1, report.externalConflict);
     }
 
     @Test

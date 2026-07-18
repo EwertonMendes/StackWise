@@ -27,7 +27,11 @@ public record OperationResult(
         if (!success && validation != null && !validation.isValid()) {
             return I18n.translate(locale, "messages.validation_failed", validation.firstError(locale));
         }
-        return I18n.translate(locale, messageKey, messageArgs);
+        String translated = I18n.translate(locale, messageKey, messageArgs);
+        if (success && report != null && report.restartRequired > 0) {
+            translated += " " + I18n.translate(locale, "messages.restart_required", report.restartRequired);
+        }
+        return translated;
     }
 
     @Override

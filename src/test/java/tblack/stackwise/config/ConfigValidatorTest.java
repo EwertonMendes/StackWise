@@ -18,10 +18,13 @@ class ConfigValidatorTest {
     void defaultConfigurationIsEnabledAndValid() {
         StackWiseConfig config = new StackWiseConfig();
 
-        assertEquals(1, config.configVersion);
+        assertEquals(2, config.configVersion);
         assertTrue(config.enabled);
         assertTrue(config.globalLimitEnabled);
+        assertEquals(GlobalStackMode.FIXED, config.globalStackMode);
         assertEquals(1000, config.globalStackLimit);
+        assertEquals(2.0D, config.globalStackMultiplier);
+        assertEquals(999, config.globalStackCap);
         assertEquals(999999, StackWiseConfig.MAX_STACK_LIMIT);
         assertTrue(validator.validate(config).isValid());
     }
@@ -64,8 +67,38 @@ class ConfigValidatorTest {
     void valuesBelowMinimumAreRejected() {
         StackWiseConfig config = new StackWiseConfig();
         config.globalStackLimit = 0;
+        config.globalStackMultiplier = 0.99D;
 
-        assertFalse(validator.validate(config).isValid());
+        ValidationResult result = validator.validate(config);
+
+        assertFalse(result.isValid());
+        assertTrue(result.errors().stream().anyMatch(issue -> issue.path().equals("globalStackMultiplier")));
+    }
+
+    @Test
+    void invalidMultiplierAndCapAreRejectedEvenInFixedMode() {
+        StackWiseConfig config = new StackWiseConfig();
+        config.globalStackMultiplier = Double.NaN;
+        config.globalStackCap = 0;
+
+        ValidationResult result = validator.validate(config);
+
+        assertFalse(result.isValid());
+        assertTrue(result.errors().stream().anyMatch(issue -> issue.path().equals("globalStackMultiplier")));
+        assertTrue(result.errors().stream().anyMatch(issue -> issue.path().equals("globalStackCap")));
+    }
+
+    @Test
+    void missingModeAndOutOfRangeMultiplierAreRejected() {
+        StackWiseConfig config = new StackWiseConfig();
+        config.globalStackMode = null;
+        config.globalStackMultiplier = StackWiseConfig.MAX_STACK_MULTIPLIER + 1.0D;
+
+        ValidationResult result = validator.validate(config);
+
+        assertFalse(result.isValid());
+        assertTrue(result.errors().stream().anyMatch(issue -> issue.path().equals("globalStackMode")));
+        assertTrue(result.errors().stream().anyMatch(issue -> issue.path().equals("globalStackMultiplier")));
     }
 
     @Test
